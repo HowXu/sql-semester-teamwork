@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { db, users, students, teachers } from "@repo/db";
 import { eq } from "drizzle-orm";
 import { LoginInputSchema } from "@repo/schema";
+import { resolveStudentId } from "./resolveStudent.js";
 
 export const authRouter = new Hono();
 
@@ -58,7 +59,8 @@ authRouter.post("/login", async (c) => {
 
 authRouter.get("/me", async (c) => {
   // 支持通过 Header 获取用户，默认回落为测试学生 student01
-  const userId = c.req.header("x-user-id") || "usr_stu_1";
+  const rawId = c.req.header("x-user-id") || "usr_stu_1";
+  const userId = await resolveStudentId(rawId);
 
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId)

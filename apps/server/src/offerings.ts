@@ -1,11 +1,13 @@
 import { Hono } from "hono";
 import { db, courseOfferings, enrollments } from "@repo/db";
 import { eq, and } from "drizzle-orm";
+import { resolveStudentId } from "./resolveStudent.js";
 
 export const offeringsRouter = new Hono();
 
 offeringsRouter.get("/", async (c) => {
-  const currentUserId = c.req.header("x-user-id") || "usr_stu_1";
+  const rawUser = c.req.header("x-user-id");
+  const currentUserId = await resolveStudentId(rawUser);
 
   // 1. 获取所有开课班次及关联课程、教师和时间段
   const allOfferings = await db.query.courseOfferings.findMany({

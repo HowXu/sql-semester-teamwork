@@ -1,18 +1,10 @@
 import { Hono } from "hono";
-import { sqlite, db, courseOfferings, enrollments, auditLogs, students } from "@repo/db";
+import { sqlite, db, courseOfferings, enrollments, auditLogs } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 import { EnrollInputSchema } from "@repo/schema";
+import { resolveStudentId } from "./resolveStudent.js";
 
 export const enrollmentsRouter = new Hono();
-
-async function resolveStudentId(idOrNo?: string | null): Promise<string> {
-  if (!idOrNo) return "usr_stu_1";
-  if (idOrNo.startsWith("usr_")) return idOrNo;
-  const st = await db.query.students.findFirst({
-    where: eq(students.studentNo, idOrNo)
-  });
-  return st ? st.id : idOrNo;
-}
 
 // 1. 原子选课（抢课）接口 - 防并发超卖与时间冲突校验
 enrollmentsRouter.post("/enroll", async (c) => {
@@ -187,7 +179,9 @@ enrollmentsRouter.post("/drop", async (c) => {
 
 // 3. 获取当前学生交互式课表网格数据
 enrollmentsRouter.get("/my-schedule", async (c) => {
-  const rawUser = c.req.header("x-user-id") || c.req.query("studentId");
+  const queryStudent = c.req.query("studentId");
+  const headerUser = c.req.header("x-user-id");
+  const rawUser = queryStudent || headerUser;
   const currentUserId = await resolveStudentId(rawUser);
 
   const myEnrollments = await db.query.enrollments.findMany({
