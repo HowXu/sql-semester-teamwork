@@ -1,0 +1,33 @@
+{
+  "name": "sql-semester-teamwork",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @repo/web --filter @repo/server dev",
+    "dev:web": "pnpm --filter @repo/web dev",
+    "dev:server": "pnpm --filter @repo/server dev",
+    "build": "pnpm -r build",
+    "build:web": "pnpm --filter @repo/web build",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "db:generate": "pnpm --filter @repo/db generate",
+    "db:migrate": "pnpm --filter @repo/db migrate",
+    "db:studio": "pnpm --filter @repo/db studio",
+    "db:seed": "pnpm --filter @repo/db seed",
+    "tauri": "pnpm --filter @repo/desktop tauri",
+    "prepare": "lefthook install"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "@types/node": "^22.13.4",
+    "eslint": "^9.20.1",
+    "globals": "^15.15.0",
+    "lefthook": "^1.11.3",
+    "picocolors": "^1.1.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.0"
+  },
+  "packageManager": "pnpm@10.13.1"
+}

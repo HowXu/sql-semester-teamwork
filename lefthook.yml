@@ -1,0 +1,24 @@
+# Lefthook Git 钩子配置
+commit-msg:
+  commands:
+    "chinese-conventional-and-three-points":
+      run: node scripts/verify-commit.js {1}
+
+pre-commit:
+  parallel: false
+  commands:
+    gitleaks:
+      run: |
+        node -e "
+          const cp = require('child_process');
+          try {
+            cp.execSync('gitleaks git --pre-commit --staged', { stdio: 'inherit' });
+            console.log('\x1b[32m[PASS] Gitleaks 安全扫描通过\x1b[0m');
+          } catch(err) {
+            console.warn('\x1b[33m[Gitleaks] 提示: 宿主机未全局安装 gitleaks，建议后续安装以加强密钥泄露防护。\x1b[0m');
+          }
+        "
+    typecheck:
+      run: pnpm typecheck
+    lint:
+      run: pnpm lint
