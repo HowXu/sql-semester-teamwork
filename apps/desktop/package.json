@@ -1,0 +1,17 @@
+{
+  "name": "@repo/desktop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "echo [INFO] Desktop workspace configuration ready"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.2.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.2.0"
+  }
+}
