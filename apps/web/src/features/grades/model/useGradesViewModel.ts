@@ -4,7 +4,7 @@ import { useUserStore } from "@/shared/stores/useUserStore";
 
 export function useGradesViewModel() {
   const { currentUser } = useUserStore();
-  const studentId = currentUser.studentId || "2024001";
+  const studentId = currentUser.studentId || "20240101";
 
   const gradesQuery = useQuery({
     queryKey: ["my-grades", studentId],

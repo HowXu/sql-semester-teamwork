@@ -105,12 +105,18 @@ const getApiBase = () => {
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const base = getApiBase();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 1500);
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
 
   let currentUserId = "usr_stu_1";
   try {
     const user = useUserStore.getState().currentUser;
-    if (user?.id) currentUserId = user.id;
+    if (user?.id) {
+      currentUserId =
+        user.id === "user-s1" ? "usr_stu_1" :
+        user.id === "user-s2" ? "usr_stu_2" :
+        user.id === "user-t1" ? "usr_tch_1" :
+        user.id === "user-a1" ? "usr_admin_1" : user.id;
+    }
   } catch {
     // fallback
   }
