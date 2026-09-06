@@ -77,8 +77,8 @@ try {
       else if (file.startsWith('docs/')) touchedPackages.add('docs');
     });
 
-    // 若同时跨越了两个或更多独立的应用/包模块（非基建/deps），拦截并要求分步原子提交
-    if (touchedPackages.size > 1 && !['基建', 'deps', 'ci', '规范'].includes(scope)) {
+    // 若同时跨越了两个或更多独立的应用/包模块（非基建/deps/文档），拦截并要求分步原子提交
+    if (touchedPackages.size > 1 && !['基建', 'deps', 'ci', '规范', '文档'].includes(scope)) {
       errors.push(`【非原子化提交拦截】检测到您本次暂存了跨多个核心包的文件：[${Array.from(touchedPackages).join(', ')}]。\n     请按照原子化提交原则分别执行 git add <目录> 并分步提交，避免大杂烩提交。`);
     }
   }
