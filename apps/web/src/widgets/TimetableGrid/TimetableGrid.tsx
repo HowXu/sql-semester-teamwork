@@ -120,7 +120,7 @@ export function TimetableGrid({
                 <div key={period.id} className="contents">
                   {/* Period sidebar */}
                   <div
-                    className={`flex flex-col items-center justify-center border-r border-border/60 bg-card px-2 py-2 text-center transition-colors ${
+                    className={`flex flex-col items-center justify-center border-r border-border/60 bg-card px-2 py-2 text-center transition-colors h-[68px] ${
                       isSectionEnd ? "border-b-2 border-b-border" : "border-b border-border/40"
                     }`}
                   >
@@ -134,7 +134,7 @@ export function TimetableGrid({
                   {DAYS.map((day) => (
                     <div
                       key={`${day.id}-${period.id}`}
-                      className={`h-14 border-r border-border/40 last:border-r-0 hover:bg-muted/10 transition-colors ${
+                      className={`h-[68px] border-r border-border/40 last:border-r-0 hover:bg-muted/10 transition-colors ${
                         isSectionEnd ? "border-b-2 border-b-border" : "border-b border-border/30"
                       }`}
                     />
@@ -148,7 +148,7 @@ export function TimetableGrid({
               variants={timetableContainerVariants}
               initial="hidden"
               animate="visible"
-              className="absolute inset-0 grid grid-cols-[110px_repeat(7,1fr)] grid-rows-[repeat(12,56px)] pointer-events-none p-0.5"
+              className="absolute inset-0 grid grid-cols-[110px_repeat(7,1fr)] grid-rows-[repeat(12,68px)] pointer-events-none p-0.5"
             >
               {scheduleItems.map((item) => {
                 const dayCol = item.dayOfWeek + 1; // Col 1 is period time column, day 1 is col 2
