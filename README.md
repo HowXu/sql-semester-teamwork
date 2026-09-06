@@ -146,24 +146,21 @@ feat(选课): 完善选课并发事务与剩余容量原子递减逻辑
 
 支持的 Scope 列表：`基建`、`规范`、`文档`、`schema`、`db`、`server`、`api`、`web`、`ui`、`desktop`、`ci`、`deps`、`选课`、`排课`、`成绩`、`动效`。
 
-### 5.2 GitHub Stacked PR (`gh stack`) 工作流
-本项目全面遵循 GitHub 官方 Stacked PR 模式，将大型系统拆解为递进的 6 层小步快跑分支：
+### 5.2 GitHub Stacked PR (`gh stack`) 分层协作建议
+为提升代码审查 (Code Review) 效率并保障主干稳定性，团队在开发较为复杂的功能时，推荐采用 GitHub 官方推荐的 **Stacked PR** 模式。通过拆分为小步递进的分层分支，避免数百上千行庞大 PR 造成的审查延迟：
 
-```text
-main (trunk)
-  └── feat/stack-1-infra-and-docs       (Layer 1: Monorepo 骨架、代码规范、文档、门禁)
-        └── feat/stack-2-schema-and-db    (Layer 2: 共享 Zod Schema、Drizzle SQLite 模型与种子)
-              └── feat/stack-3-backend-api     (Layer 3: Hono.js API、并发防超卖事务、排课冲突检测)
-                    └── feat/stack-4-frontend-core    (Layer 4: Vite + React 19 + Tailwind v4 + Zustand + Motion)
-                          └── feat/stack-5-desktop-and-ci   (Layer 5: Tauri 2.0 桌面配置、CI/CD 自动化流水线)
-                                └── feat/stack-6-docs-and-ci-polish (Layer 6: 文档同步、CI/CD 强化与 README 完善)
-```
+- **底层承载**：数据模型（Schema/DB）或公共类型契约
+- **中层驱动**：后端 API 路由、业务逻辑与并发事务处理
+- **上层表现**：前端 ViewModel、页面组件与交互动效
 
-一键向 GitHub 远程提交整个分层堆栈并自动生成关联 PR：
+使用 `gh stack` 可实现一键向远端推送分层堆栈并自动生成互相关联的 PR：
 
 ```bash
+# 全栈推送分支并自动生成层叠 PR
 gh stack submit
 ```
+
+完整的分层协作理念、指令速查及实战案例请参阅 [Git 提交规范与 GitHub Stacked PR 工作流指南](./docs/git-workflow.md)。
 
 ---
 
