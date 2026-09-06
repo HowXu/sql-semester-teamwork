@@ -22,7 +22,7 @@ const nonWhitespaceCount = fullText.replace(/\s+/g, '').length;
 
 // 1. 提取 Header (第一行)
 const header = cleanLines[0] || '';
-const headerRegex = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9_\u4e00-\u9fa5\-\.]+\))?:\s*.+/;
+const headerRegex = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9_\u4e00-\u9fa5\-.]+\))?:\s*.+/;
 
 // 2. 检查三点论关键词
 const hasProblem = /(?:^|\n)\s*问题[：:]\s*\S+/.test(fullText);
