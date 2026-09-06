@@ -108,16 +108,24 @@ export function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
-              {stats?.departmentStats.map((dept) => (
-                <tr key={dept.department} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-3 font-medium text-foreground">{dept.department}</td>
-                  <td className="px-4 py-3 font-mono text-muted-foreground">{dept.courseCount}</td>
-                  <td className="px-4 py-3 font-mono text-muted-foreground">{dept.offeringCount}</td>
-                  <td className="px-4 py-3 font-mono font-bold text-foreground">
-                    {dept.enrollmentCount}
+              {(stats?.departmentStats ?? []).length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                    暂无开课学院统计记录
                   </td>
                 </tr>
-              ))}
+              ) : (
+                (stats?.departmentStats ?? []).map((dept) => (
+                  <tr key={dept.department} className="hover:bg-muted/20 transition-colors">
+                    <td className="px-4 py-3 font-medium text-foreground">{dept.department}</td>
+                    <td className="px-4 py-3 font-mono text-muted-foreground">{dept.courseCount}</td>
+                    <td className="px-4 py-3 font-mono text-muted-foreground">{dept.offeringCount}</td>
+                    <td className="px-4 py-3 font-mono font-bold text-foreground">
+                      {dept.enrollmentCount}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
