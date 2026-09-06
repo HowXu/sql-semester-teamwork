@@ -60,7 +60,7 @@ gh stack view --short
 gh stack submit
 ```
 
-若对底层分支进行了修改，请执行 `gh stack rebase --upstack` 级联同步上层分支。详细操作步骤请参阅 [Git 工作流与 Stack PR 指南](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/git-workflow.md)。
+若对底层分支进行了修改，请执行 `gh stack rebase --upstack` 级联同步上层分支。详细操作步骤请参阅 [Git 工作流与 Stack PR 指南](./docs/git-workflow.md)。
 
 ---
 
@@ -100,6 +100,7 @@ pnpm tauri dev
 ## 5. 详细工程技术文档
 
 - 架构设计详情：[系统整体架构与工程规范](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/architecture.md)
+- 界面与设计系统：[设计系统与视觉规范 (TweakCN Light Green)](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/design-system.md)
 - 数据库与并发：[数据库模型与高级特性设计](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/database-design.md)
 - 代码质量与规范：[工程措施与代码质量标准](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/engineering-standards.md)
 - 分支与门禁指南：[Git 提交规范与 GitHub Stacked PR 工作流指南](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/git-workflow.md)

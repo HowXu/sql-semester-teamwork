@@ -1,0 +1,62 @@
+name: Release Windows Desktop App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-tauri-windows:
+    name: Build Tauri Windows Executable
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile || pnpm install
+
+      - name: Build Web Frontend Assets
+        run: pnpm build:web
+
+      - name: Build Tauri Desktop Package
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: '教务选课系统 ${{ github.ref_name }}'
+          releaseBody: |
+            ## 教务选课系统 Windows 客户端自动化发布
+            
+            本版本由 GitHub Actions 自动化编译打包。
+            
+            ### 包含产物
+            - Windows 安装包 (.exe / NSIS)
+            - Windows 离线安装包 (.msi)
+            
+            ### 运行环境要求
+            - Windows 10 / 11 64位系统
+            - 系统自带 Microsoft Edge WebView2 Runtime
+          releaseDraft: false
+          prerelease: false
+          args: --config apps/desktop/src-tauri/tauri.conf.json
