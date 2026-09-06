@@ -77,9 +77,33 @@
   * {
     border-color: var(--border);
   }
-  body {
+  html, body {
     background-color: var(--background);
     color: var(--foreground);
+    font-family: 'LXGW WenKai Screen', 'LXGW WenKai', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Segoe UI', system-ui, -apple-system, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+}
+
+@keyframes streaming-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-streaming {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--muted) 80%, transparent) 0%,
+    color-mix(in oklch, var(--primary) 18%, var(--muted)) 50%,
+    color-mix(in oklch, var(--muted) 80%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: streaming-shimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }

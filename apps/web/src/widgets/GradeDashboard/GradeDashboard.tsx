@@ -1,11 +1,15 @@
 import { useGradesViewModel } from "@/features/grades/model/useGradesViewModel";
 import { GpaMetricCard } from "@/entities/grade/ui/GpaMetricCard";
 import { Award, RefreshCw, CheckCircle2, AlertCircle } from "@/shared/icons";
-import { Badge, Button } from "@/shared/ui";
+import { Badge, Button, GradeDashboardSkeleton } from "@/shared/ui";
 
 export function GradeDashboard() {
   const { state, actions } = useGradesViewModel();
   const gradesData = state.data;
+
+  if (state.isLoading && !gradesData) {
+    return <GradeDashboardSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -16,8 +20,8 @@ export function GradeDashboard() {
             <Award className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-foreground">
-              学业成绩与加权 GPA 评定中心
+            <h2 className="text-base font-bold text-foreground">
+              学业成绩与绩点查询
             </h2>
             <p className="text-xs text-muted-foreground">
               当前学生：{state.currentStudentName} ({state.currentStudentId}) · 2026-2027 学年第一学期
@@ -48,8 +52,8 @@ export function GradeDashboard() {
       {/* Grades Table */}
       <div className="rounded-2xl border border-border/80 bg-card shadow-xs overflow-hidden">
         <div className="px-5 py-4 border-b border-border/80 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground">本学期课程成绩详细明细表</h3>
-          <span className="text-xs text-muted-foreground font-mono">共 {state.totalCount} 门考评记录</span>
+          <h3 className="text-sm font-bold text-foreground">课程成绩与考核结果</h3>
+          <span className="text-xs text-muted-foreground font-mono">共 {state.totalCount} 门课程</span>
         </div>
 
         {state.totalCount === 0 ? (

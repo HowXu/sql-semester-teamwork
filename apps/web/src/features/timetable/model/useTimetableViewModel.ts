@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, type ApiScheduleItem } from "@/shared/api/client";
+import { api, type ApiScheduleItem, type ApiScheduleResponse } from "@/shared/api/client";
 import { useUserStore } from "@/shared/stores/useUserStore";
 
 export function useTimetableViewModel() {
   const queryClient = useQueryClient();
   const { currentUser } = useUserStore();
-  const studentId = currentUser.studentId || "2024001";
+  const studentId = currentUser.studentId || currentUser.teacherId || "20240101";
 
   const [courseToDrop, setCourseToDrop] = useState<ApiScheduleItem | null>(null);
   const [notification, setNotification] = useState<{
@@ -21,6 +21,24 @@ export function useTimetableViewModel() {
 
   const dropMutation = useMutation({
     mutationFn: (offeringId: string) => api.drop(studentId, offeringId),
+    onMutate: async (offeringId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["my-schedule", studentId] });
+      const previousSchedule = queryClient.getQueryData<ApiScheduleResponse>(["my-schedule", studentId]);
+      if (previousSchedule) {
+        const nextItems = previousSchedule.items.filter((it) => it.offeringId !== offeringId);
+        const nextMatrix = previousSchedule.scheduleMatrix.map((day) =>
+          day.map((cell) => (cell?.offeringId === offeringId ? null : cell))
+        );
+        queryClient.setQueryData<ApiScheduleResponse>(["my-schedule", studentId], {
+          ...previousSchedule,
+          items: nextItems,
+          enrolledCount: nextItems.length,
+          totalCredits: nextItems.reduce((acc, it) => acc + it.credits, 0),
+          scheduleMatrix: nextMatrix,
+        });
+      }
+      return { previousSchedule };
+    },
     onSuccess: (data) => {
       setNotification({ type: "success", message: data.message });
       setCourseToDrop(null);
@@ -29,7 +47,10 @@ export function useTimetableViewModel() {
       void queryClient.invalidateQueries({ queryKey: ["my-grades", studentId] });
       void queryClient.invalidateQueries({ queryKey: ["stats-overview"] });
     },
-    onError: (err: Error) => {
+    onError: (err: Error, _offeringId, context) => {
+      if (context?.previousSchedule) {
+        queryClient.setQueryData(["my-schedule", studentId], context.previousSchedule);
+      }
       setNotification({ type: "error", message: err.message });
     },
   });

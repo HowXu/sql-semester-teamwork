@@ -1,10 +1,14 @@
 import { useAdminViewModel } from "@/features/admin/model/useAdminViewModel";
 import { BarChart3, Database, Users, BookOpen, RefreshCw } from "@/shared/icons";
-import { Button } from "@/shared/ui";
+import { Button, AdminDashboardSkeleton } from "@/shared/ui";
 
 export function AdminDashboard() {
   const { state, actions } = useAdminViewModel();
   const stats = state.stats;
+
+  if (state.isLoading && !stats) {
+    return <AdminDashboardSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -15,11 +19,11 @@ export function AdminDashboard() {
             <BarChart3 className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-foreground">
-              教学运行大盘与全校选课容量监控
+            <h2 className="text-base font-bold text-foreground">
+              全校教学运行数据总览
             </h2>
             <p className="text-xs text-muted-foreground">
-              实时聚合 SQLite 本地数据库中的全部开课与选修事务数据
+              教学运行状况与全校各学院开课、学生选课容量统计
             </p>
           </div>
         </div>
@@ -90,7 +94,7 @@ export function AdminDashboard() {
       {/* Department Breakdown Table */}
       <div className="rounded-2xl border border-border/80 bg-card shadow-xs overflow-hidden">
         <div className="px-5 py-4 border-b border-border/80">
-          <h3 className="text-sm font-semibold text-foreground">各开课学院运行情况分布</h3>
+          <h3 className="text-sm font-bold text-foreground">各学院开课与选课统计</h3>
         </div>
 
         <div className="overflow-x-auto">

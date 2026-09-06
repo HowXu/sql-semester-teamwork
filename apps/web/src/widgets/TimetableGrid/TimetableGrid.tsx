@@ -57,9 +57,9 @@ export function TimetableGrid({
             <Calendar className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-foreground">每周修读总排课表</h2>
+            <h2 className="text-base font-bold text-foreground">个人学期排课表</h2>
             <p className="text-xs text-muted-foreground">
-              标准 7 天 x 12 节课交互排课矩阵 · 冲突检测已激活
+              当前学期修读课程日程分布，点击卡片可查看教学地点与课程信息
             </p>
           </div>
         </div>

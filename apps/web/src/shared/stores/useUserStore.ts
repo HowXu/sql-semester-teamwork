@@ -13,28 +13,28 @@ export interface AppUser {
 export const PRESET_USERS: AppUser[] = [
   {
     id: "user-s1",
-    name: "陈同学",
+    name: "李明",
     role: "student",
     department: "计算机科学与技术学院",
-    studentId: "2024001",
+    studentId: "20240101",
   },
   {
     id: "user-s2",
-    name: "林同学",
+    name: "苏晓彤",
     role: "student",
-    department: "软件工程学院",
-    studentId: "2024002",
+    department: "计算机科学与技术学院",
+    studentId: "20240102",
   },
   {
     id: "user-t1",
-    name: "张建国 教授",
+    name: "张博远 教授",
     role: "teacher",
     department: "计算机科学与技术学院",
-    teacherId: "T001",
+    teacherId: "T1001",
   },
   {
     id: "user-a1",
-    name: "教务管理科",
+    name: "教务管理中心",
     role: "admin",
     department: "教务处",
   },
@@ -48,10 +48,10 @@ interface UserState {
 
 const defaultUser: AppUser = {
   id: "user-s1",
-  name: "陈同学",
+  name: "李明",
   role: "student",
   department: "计算机科学与技术学院",
-  studentId: "2024001",
+  studentId: "20240101",
 };
 
 export const useUserStore = create<UserState>()(

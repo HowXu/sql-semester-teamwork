@@ -68,8 +68,8 @@ export function EnrollmentCartModal() {
                 <ShoppingCart className="h-4 w-4" />
               </div>
               <div>
-                <DialogPrimitive.Title className="text-base font-semibold text-card-foreground">
-                  选课预选清单 (预选车)
+                <DialogPrimitive.Title className="text-base font-bold text-card-foreground">
+                  预选课程清单
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="text-xs text-muted-foreground">
                   已暂存 {drafts.length} 门课程 · 累计 {totalCredits.toFixed(1)} 学分
@@ -88,9 +88,9 @@ export function EnrollmentCartModal() {
             {drafts.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-48 text-center text-muted-foreground text-xs space-y-2">
                 <ShoppingCart className="h-8 w-8 opacity-30" />
-                <p>预选车当前为空</p>
-                <p className="text-[11px] text-muted-foreground/80">
-                  可在“选课大厅”中点击“预选车”按钮将意向课程快速暂存至此
+                <p className="font-semibold text-sm">预选清单当前为空</p>
+                <p className="text-xs text-muted-foreground/80">
+                  可在选课大厅中点击“预选车”暂存意向课程并批量提交
                 </p>
               </div>
             ) : (
@@ -133,7 +133,7 @@ export function EnrollmentCartModal() {
             {/* Results Feedback Banner */}
             {results && (
               <div className="mt-4 rounded-xl border border-border/80 bg-muted/40 p-3 space-y-2 text-xs">
-                <div className="font-semibold text-foreground">本次批量抢课结算结果：</div>
+                <div className="font-semibold text-foreground">选课提交结果：</div>
                 {results.map((r, idx) => (
                   <div key={idx} className="flex items-start gap-2">
                     {r.success ? (
@@ -153,7 +153,7 @@ export function EnrollmentCartModal() {
           {/* Footer */}
           <div className="border-t border-border/70 pt-4 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">拟选学生身份</span>
+              <span className="text-muted-foreground">当前选课学生</span>
               <span className="font-semibold text-foreground">{currentUser.name} ({studentId})</span>
             </div>
             <div className="flex gap-2">
@@ -176,14 +176,14 @@ export function EnrollmentCartModal() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>并发提交中...</span>
+                    <span>提交选课中...</span>
                   </>
                 ) : (
                   <>
                     <Badge variant="secondary" className="px-1 py-0 text-[10px] font-mono">
                       {drafts.length}
                     </Badge>
-                    <span>一键批量结算选课</span>
+                    <span>批量提交选课</span>
                   </>
                 )}
               </Button>

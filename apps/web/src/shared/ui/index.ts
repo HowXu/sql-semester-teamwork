@@ -3,4 +3,5 @@ export * from "./atoms/Input";
 export * from "./atoms/Badge";
 export * from "./molecules/SearchInput";
 export * from "./molecules/CapacityBar";
+export * from "./molecules/StreamingSkeleton";
 export * from "./organisms/ConfirmModal";

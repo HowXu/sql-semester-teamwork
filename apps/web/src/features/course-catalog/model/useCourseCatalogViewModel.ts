@@ -18,6 +18,11 @@ export function useCourseCatalogViewModel() {
 
   const { drafts, addDraft, removeDraft } = useCourseDraftStore();
 
+  // Optimistic tracking sets
+  const [optimisticEnrolledIds, setOptimisticEnrolledIds] = useState<Set<string>>(new Set());
+  const [optimisticDroppedIds, setOptimisticDroppedIds] = useState<Set<string>>(new Set());
+  const [pendingOfferingId, setPendingOfferingId] = useState<string | null>(null);
+
   // 1. Fetch available course offerings
   const offeringsQuery = useQuery({
     queryKey: ["offerings"],
@@ -31,9 +36,16 @@ export function useCourseCatalogViewModel() {
   });
 
   const enrolledOfferingIds = useMemo(() => {
-    if (!scheduleQuery.data?.items) return new Set<string>();
-    return new Set(scheduleQuery.data.items.map((i) => i.offeringId));
-  }, [scheduleQuery.data]);
+    const ids = new Set<string>();
+    if (scheduleQuery.data?.items) {
+      for (const i of scheduleQuery.data.items) {
+        ids.add(i.offeringId);
+      }
+    }
+    for (const id of optimisticEnrolledIds) ids.add(id);
+    for (const id of optimisticDroppedIds) ids.delete(id);
+    return ids;
+  }, [scheduleQuery.data, optimisticEnrolledIds, optimisticDroppedIds]);
 
   // Compute time conflict helper
   const conflictMap = useMemo(() => {
@@ -43,8 +55,8 @@ export function useCourseCatalogViewModel() {
     for (const offering of offeringsQuery.data.offerings) {
       if (enrolledOfferingIds.has(offering.id)) continue;
       for (const enrolled of scheduleQuery.data.items) {
+        if (optimisticDroppedIds.has(enrolled.offeringId)) continue;
         if (enrolled.dayOfWeek === offering.dayOfWeek) {
-          // Check period overlap
           const overlaps =
             Math.max(offering.startPeriod, enrolled.startPeriod) <=
             Math.min(offering.endPeriod, enrolled.endPeriod);
@@ -59,12 +71,21 @@ export function useCourseCatalogViewModel() {
       }
     }
     return map;
-  }, [offeringsQuery.data, scheduleQuery.data, enrolledOfferingIds]);
+  }, [offeringsQuery.data, scheduleQuery.data, enrolledOfferingIds, optimisticDroppedIds]);
 
-  // Filtered offerings
+  // Filtered offerings with optimistic capacity adjustment
   const filteredOfferings = useMemo(() => {
     if (!offeringsQuery.data?.offerings) return [];
-    return offeringsQuery.data.offerings.filter((o) => {
+    return offeringsQuery.data.offerings.map((o) => {
+      let cap = o.currentCapacity;
+      if (optimisticEnrolledIds.has(o.id) && !scheduleQuery.data?.items?.some((i) => i.offeringId === o.id)) {
+        cap = Math.min(o.maxCapacity, cap + 1);
+      }
+      if (optimisticDroppedIds.has(o.id)) {
+        cap = Math.max(0, cap - 1);
+      }
+      return { ...o, currentCapacity: cap };
+    }).filter((o) => {
       const matchDept =
         selectedDepartment === "all" || o.department === selectedDepartment;
       const lowerQ = searchTerm.toLowerCase().trim();
@@ -75,7 +96,7 @@ export function useCourseCatalogViewModel() {
         o.teacherName.toLowerCase().includes(lowerQ);
       return matchDept && matchSearch;
     });
-  }, [offeringsQuery.data, selectedDepartment, searchTerm]);
+  }, [offeringsQuery.data, selectedDepartment, searchTerm, optimisticEnrolledIds, optimisticDroppedIds, scheduleQuery.data]);
 
   // All distinct departments for filter pills
   const departments = useMemo(() => {
@@ -84,9 +105,18 @@ export function useCourseCatalogViewModel() {
     return Array.from(depts);
   }, [offeringsQuery.data]);
 
-  // Enroll Mutation
+  // Enroll Mutation with instant optimistic feedback
   const enrollMutation = useMutation({
-    mutationFn: (offeringId: string) => api.enroll(studentId, offeringId),
+    mutationFn: (offering: ApiOffering) => {
+      setPendingOfferingId(offering.id);
+      setOptimisticEnrolledIds((prev) => new Set(prev).add(offering.id));
+      setOptimisticDroppedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(offering.id);
+        return next;
+      });
+      return api.enroll(studentId, offering.id);
+    },
     onSuccess: (data) => {
       setNotification({ type: "success", message: data.message });
       void queryClient.invalidateQueries({ queryKey: ["offerings"] });
@@ -94,14 +124,31 @@ export function useCourseCatalogViewModel() {
       void queryClient.invalidateQueries({ queryKey: ["my-grades", studentId] });
       void queryClient.invalidateQueries({ queryKey: ["stats-overview"] });
     },
-    onError: (err: Error) => {
+    onError: (err: Error, offering) => {
+      setOptimisticEnrolledIds((prev) => {
+        const next = new Set(prev);
+        next.delete(offering.id);
+        return next;
+      });
       setNotification({ type: "error", message: err.message });
+    },
+    onSettled: () => {
+      setPendingOfferingId(null);
     },
   });
 
-  // Drop Mutation
+  // Drop Mutation with instant optimistic feedback
   const dropMutation = useMutation({
-    mutationFn: (offeringId: string) => api.drop(studentId, offeringId),
+    mutationFn: (offering: ApiOffering) => {
+      setPendingOfferingId(offering.id);
+      setOptimisticDroppedIds((prev) => new Set(prev).add(offering.id));
+      setOptimisticEnrolledIds((prev) => {
+        const next = new Set(prev);
+        next.delete(offering.id);
+        return next;
+      });
+      return api.drop(studentId, offering.id);
+    },
     onSuccess: (data) => {
       setNotification({ type: "success", message: data.message });
       void queryClient.invalidateQueries({ queryKey: ["offerings"] });
@@ -109,8 +156,16 @@ export function useCourseCatalogViewModel() {
       void queryClient.invalidateQueries({ queryKey: ["my-grades", studentId] });
       void queryClient.invalidateQueries({ queryKey: ["stats-overview"] });
     },
-    onError: (err: Error) => {
+    onError: (err: Error, offering) => {
+      setOptimisticDroppedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(offering.id);
+        return next;
+      });
       setNotification({ type: "error", message: err.message });
+    },
+    onSettled: () => {
+      setPendingOfferingId(null);
     },
   });
 
@@ -148,14 +203,15 @@ export function useCourseCatalogViewModel() {
       notification,
       isLoading: offeringsQuery.isLoading || scheduleQuery.isLoading,
       isActionLoading: enrollMutation.isPending || dropMutation.isPending,
+      pendingOfferingId,
       currentStudentId: studentId,
     },
     actions: {
       setSearchTerm,
       setSelectedDepartment,
       dismissNotification: () => setNotification(null),
-      enrollCourse: (offering: ApiOffering) => enrollMutation.mutate(offering.id),
-      dropCourse: (offering: ApiOffering) => dropMutation.mutate(offering.id),
+      enrollCourse: (offering: ApiOffering) => enrollMutation.mutate(offering),
+      dropCourse: (offering: ApiOffering) => dropMutation.mutate(offering),
       toggleDraft: handleToggleDraft,
     },
   };

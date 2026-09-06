@@ -89,10 +89,21 @@ export interface ApiStatsResponse {
   }[];
 }
 
-const API_BASE = "";
+import { offlineDataEngine } from "./offlineDataEngine";
+
+const getApiBase = () => {
+  if (typeof window !== "undefined") {
+    // If in Vite dev server, use empty string so Vite proxy forwards to :3000
+    if (window.location.port === "5173") return "";
+    // If in Tauri or standalone build, target localhost:3000
+    return "http://127.0.0.1:3000";
+  }
+  return "http://127.0.0.1:3000";
+};
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const base = getApiBase();
+  const res = await fetch(`${base}${path}`, {
     headers: {
       "Content-Type": "application/json",
       ...options?.headers,
@@ -109,68 +120,100 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  getCourses: (q?: string, department?: string) => {
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (department) params.set("department", department);
-    const query = params.toString();
-    return request<{ courses: ApiCourse[] }>(`/api/courses${query ? `?${query}` : ""}`);
+  getCourses: async (q?: string, department?: string) => {
+    try {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      if (department) params.set("department", department);
+      const query = params.toString();
+      return await request<{ courses: ApiCourse[] }>(`/api/courses${query ? `?${query}` : ""}`);
+    } catch {
+      return offlineDataEngine.getCourses(q, department);
+    }
   },
 
-  getOfferings: (semester?: string, dayOfWeek?: number) => {
-    const params = new URLSearchParams();
-    if (semester) params.set("semester", semester);
-    if (dayOfWeek !== undefined) params.set("dayOfWeek", dayOfWeek.toString());
-    const query = params.toString();
-    return request<{ offerings: ApiOffering[] }>(`/api/offerings${query ? `?${query}` : ""}`);
+  getOfferings: async (semester?: string, dayOfWeek?: number) => {
+    try {
+      const params = new URLSearchParams();
+      if (semester) params.set("semester", semester);
+      if (dayOfWeek !== undefined) params.set("dayOfWeek", dayOfWeek.toString());
+      const query = params.toString();
+      return await request<{ offerings: ApiOffering[] }>(`/api/offerings${query ? `?${query}` : ""}`);
+    } catch {
+      return offlineDataEngine.getOfferings(semester, dayOfWeek);
+    }
   },
 
-  checkConflict: (payload: {
+  checkConflict: async (payload: {
     dayOfWeek: number;
     startPeriod: number;
     endPeriod: number;
     excludeOfferingId?: string;
   }) => {
-    return request<{
-      hasConflict: boolean;
-      conflictCount: number;
-      conflicts: ApiOffering[];
-    }>("/api/offerings/check-conflict", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+    try {
+      return await request<{
+        hasConflict: boolean;
+        conflictCount: number;
+        conflicts: ApiOffering[];
+      }>("/api/offerings/check-conflict", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      return offlineDataEngine.checkConflict(payload);
+    }
   },
 
-  getMySchedule: (studentId: string, semester?: string) => {
-    const params = new URLSearchParams({ studentId });
-    if (semester) params.set("semester", semester);
-    return request<ApiScheduleResponse>(`/api/enrollments/my-schedule?${params.toString()}`);
+  getMySchedule: async (studentId: string, semester?: string) => {
+    try {
+      const params = new URLSearchParams({ studentId });
+      if (semester) params.set("semester", semester);
+      return await request<ApiScheduleResponse>(`/api/enrollments/my-schedule?${params.toString()}`);
+    } catch {
+      return offlineDataEngine.getMySchedule(studentId, semester);
+    }
   },
 
-  enroll: (studentId: string, offeringId: string) => {
-    return request<{ success: true; enrollmentId: string; message: string }>(
-      "/api/enrollments/enroll",
-      {
+  enroll: async (studentId: string, offeringId: string) => {
+    try {
+      return await request<{ success: true; enrollmentId: string; message: string }>(
+        "/api/enrollments/enroll",
+        {
+          method: "POST",
+          body: JSON.stringify({ studentId, offeringId }),
+        }
+      );
+    } catch {
+      return offlineDataEngine.enroll(studentId, offeringId);
+    }
+  },
+
+  drop: async (studentId: string, offeringId: string) => {
+    try {
+      return await request<{ success: true; message: string }>("/api/enrollments/drop", {
         method: "POST",
         body: JSON.stringify({ studentId, offeringId }),
-      }
-    );
+      });
+    } catch {
+      return offlineDataEngine.drop(studentId, offeringId);
+    }
   },
 
-  drop: (studentId: string, offeringId: string) => {
-    return request<{ success: true; message: string }>("/api/enrollments/drop", {
-      method: "POST",
-      body: JSON.stringify({ studentId, offeringId }),
-    });
+  getMyGrades: async (studentId: string, semester?: string) => {
+    try {
+      const params = new URLSearchParams({ studentId });
+      if (semester) params.set("semester", semester);
+      return await request<ApiGradeResponse>(`/api/grades/my?${params.toString()}`);
+    } catch {
+      return offlineDataEngine.getMyGrades(studentId, semester);
+    }
   },
 
-  getMyGrades: (studentId: string, semester?: string) => {
-    const params = new URLSearchParams({ studentId });
-    if (semester) params.set("semester", semester);
-    return request<ApiGradeResponse>(`/api/grades/my?${params.toString()}`);
-  },
-
-  getStats: () => {
-    return request<ApiStatsResponse>("/api/stats/overview");
+  getStats: async () => {
+    try {
+      return await request<ApiStatsResponse>("/api/stats/overview");
+    } catch {
+      return offlineDataEngine.getStats();
+    }
   },
 };

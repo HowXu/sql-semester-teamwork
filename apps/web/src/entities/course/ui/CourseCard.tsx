@@ -42,52 +42,52 @@ export function CourseCard({
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center rounded-md bg-secondary/15 px-2 py-0.5 text-xs font-mono font-medium text-secondary">
+              <span className="inline-flex items-center rounded-md bg-secondary/15 px-2 py-0.5 text-xs font-mono font-bold text-secondary">
                 {offering.courseCode}
               </span>
               <Badge variant="outline">{offering.department}</Badge>
-              <span className="text-xs font-mono font-semibold text-primary">
+              <span className="text-xs font-mono font-bold text-primary">
                 {offering.credits.toFixed(1)} 学分
               </span>
             </div>
-            <h3 className="text-base font-semibold text-card-foreground tracking-tight pt-1">
+            <h3 className="text-base font-bold text-card-foreground tracking-tight pt-1">
               {offering.courseName}
             </h3>
           </div>
 
           {isEnrolled ? (
-            <Badge variant="success" className="shrink-0">
+            <Badge variant="success" className="shrink-0 font-medium">
               <Check className="h-3.5 w-3.5" />
               <span>已修读</span>
             </Badge>
           ) : hasTimeConflict ? (
-            <Badge variant="danger" className="shrink-0" title={conflictDetails}>
+            <Badge variant="danger" className="shrink-0 font-medium" title={conflictDetails}>
               <AlertTriangle className="h-3.5 w-3.5" />
               <span>时间冲突</span>
             </Badge>
           ) : isFull ? (
-            <Badge variant="destructive" className="shrink-0">
+            <Badge variant="destructive" className="shrink-0 font-medium">
               <span>已满额</span>
             </Badge>
           ) : (
-            <Badge variant="outline" className="shrink-0 text-muted-foreground">
+            <Badge variant="outline" className="shrink-0 text-muted-foreground font-medium">
               <span>可修选</span>
             </Badge>
           )}
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-muted-foreground border-y border-border/50 py-2.5">
+        <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-foreground/80 border-y border-border/50 py-2.5">
           <div className="flex items-center gap-1.5 truncate">
-            <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground/80" />
-            <span className="truncate">{offering.teacherName}</span>
+            <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate font-medium">{offering.teacherName}</span>
           </div>
           <div className="flex items-center gap-1.5 truncate">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground/80" />
-            <span className="truncate">{offering.classroom}</span>
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate font-medium">{offering.classroom}</span>
           </div>
           <div className="col-span-2 flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground/80" />
-            <span className="font-mono">{periodText}</span>
+            <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="font-mono font-medium">{periodText}</span>
           </div>
         </div>
 
@@ -101,9 +101,9 @@ export function CourseCard({
           variant={isDrafted ? "secondary" : "ghost"}
           size="sm"
           onClick={() => onToggleDraft(offering)}
-          disabled={isEnrolled}
+          disabled={isEnrolled || isLoading}
           title={isDrafted ? "已在预选车" : "加入预选清单"}
-          className="text-xs"
+          className="text-xs font-medium"
         >
           <ShoppingCart className="h-3.5 w-3.5" />
           <span>{isDrafted ? "已暂存" : "预选车"}</span>
@@ -115,9 +115,9 @@ export function CourseCard({
             size="sm"
             onClick={() => onDrop(offering)}
             disabled={isLoading}
-            className="text-xs"
+            className="text-xs font-medium"
           >
-            <span>申请退选</span>
+            <span>{isLoading ? "处理中..." : "申请退选"}</span>
           </Button>
         ) : (
           <Button
@@ -125,10 +125,10 @@ export function CourseCard({
             size="sm"
             onClick={() => onEnroll(offering)}
             disabled={isLoading || isFull || hasTimeConflict}
-            className="text-xs"
+            className="text-xs font-medium"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>立即选课</span>
+            <span>{isLoading ? "选课中..." : "立即选课"}</span>
           </Button>
         )}
       </div>

@@ -1,7 +1,7 @@
 import { useTimetableViewModel } from "@/features/timetable/model/useTimetableViewModel";
 import { TimetableGrid } from "@/widgets/TimetableGrid/TimetableGrid";
 import { CheckCircle2, AlertCircle, X, RefreshCw } from "@/shared/icons";
-import { Button } from "@/shared/ui";
+import { Button, TimetableSkeleton } from "@/shared/ui";
 
 export function TimetablePage() {
   const { state, actions } = useTimetableViewModel();
@@ -44,13 +44,17 @@ export function TimetablePage() {
         </Button>
       </div>
 
-      <TimetableGrid
-        scheduleItems={schedule?.items || []}
-        totalCredits={schedule?.totalCredits || 0}
-        enrolledCount={schedule?.enrolledCount || 0}
-        onDropCourse={actions.openDropModal}
-        isDropping={state.isDropping}
-      />
+      {state.isLoading && !schedule ? (
+        <TimetableSkeleton />
+      ) : (
+        <TimetableGrid
+          scheduleItems={schedule?.items || []}
+          totalCredits={schedule?.totalCredits || 0}
+          enrolledCount={schedule?.enrolledCount || 0}
+          onDropCourse={actions.openDropModal}
+          isDropping={state.isDropping}
+        />
+      )}
     </div>
   );
 }

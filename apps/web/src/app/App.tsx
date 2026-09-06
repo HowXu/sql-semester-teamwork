@@ -28,7 +28,7 @@ export function App() {
       <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/20 selection:text-primary">
         <Navbar currentTab={currentTab} onTabChange={setCurrentTab} />
 
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentTab}
@@ -46,10 +46,10 @@ export function App() {
           </AnimatePresence>
         </main>
 
-        <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div>小学期数据库系统综合实践 · 高性能单机 SQLite / Hono.js / React 19</div>
-            <div className="font-mono text-[11px]">TweakCN Light Green 设计规范 · 严格零 Emoji</div>
+        <footer className="border-t border-border/70 py-6 text-center text-xs sm:text-sm text-muted-foreground">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="font-medium">综合教务选课系统 · 数字化教学服务平台</div>
+            <div className="text-muted-foreground/70">2026-2027学年 第一学期</div>
           </div>
         </footer>
 
