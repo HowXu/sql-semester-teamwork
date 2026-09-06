@@ -1,14 +1,24 @@
 import { Hono } from "hono";
-import { sqlite, db, courseOfferings, enrollments, auditLogs } from "@repo/db";
+import { sqlite, db, courseOfferings, enrollments, auditLogs, students } from "@repo/db";
 import { eq, and } from "drizzle-orm";
-import { EnrollInputSchema, DropInputSchema } from "@repo/schema";
+import { EnrollInputSchema } from "@repo/schema";
 
 export const enrollmentsRouter = new Hono();
 
+async function resolveStudentId(idOrNo?: string | null): Promise<string> {
+  if (!idOrNo) return "usr_stu_1";
+  if (idOrNo.startsWith("usr_")) return idOrNo;
+  const st = await db.query.students.findFirst({
+    where: eq(students.studentNo, idOrNo)
+  });
+  return st ? st.id : idOrNo;
+}
+
 // 1. 原子选课（抢课）接口 - 防并发超卖与时间冲突校验
 enrollmentsRouter.post("/enroll", async (c) => {
-  const currentUserId = c.req.header("x-user-id") || "usr_stu_1";
+  const rawUser = c.req.header("x-user-id");
   const body = await c.req.json();
+  const currentUserId = await resolveStudentId(body.studentId || rawUser);
   const parsed = EnrollInputSchema.safeParse(body);
   if (!parsed.success) {
     return c.json({ error: "参数校验失败", details: parsed.error.format() }, 400);
@@ -123,18 +133,20 @@ enrollmentsRouter.post("/enroll", async (c) => {
 
 // 2. 退课接口 - 恢复剩余名额
 enrollmentsRouter.post("/drop", async (c) => {
-  const currentUserId = c.req.header("x-user-id") || "usr_stu_1";
+  const rawUser = c.req.header("x-user-id");
   const body = await c.req.json();
-  const parsed = DropInputSchema.safeParse(body);
-  if (!parsed.success) {
-    return c.json({ error: "参数校验失败", details: parsed.error.format() }, 400);
-  }
+  const currentUserId = await resolveStudentId(body.studentId || rawUser);
 
-  const { enrollmentId } = parsed.data;
+  const enrollmentId = body.enrollmentId;
+  const offeringId = body.offeringId;
+
+  if (!enrollmentId && !offeringId) {
+    return c.json({ error: "选课记录 ID 或教学班 ID 不能为空" }, 400);
+  }
 
   const enr = await db.query.enrollments.findFirst({
     where: and(
-      eq(enrollments.id, enrollmentId),
+      enrollmentId ? eq(enrollments.id, enrollmentId) : eq(enrollments.offeringId, offeringId),
       eq(enrollments.studentId, currentUserId),
       eq(enrollments.status, "ACTIVE")
     ),
@@ -154,7 +166,7 @@ enrollmentsRouter.post("/drop", async (c) => {
   // 更新选课状态为 DROPPED
   await db.update(enrollments)
     .set({ status: "DROPPED" })
-    .where(eq(enrollments.id, enrollmentId));
+    .where(eq(enrollments.id, enr.id));
 
   // 释放教学班名额
   await sqlite.execute({
@@ -175,7 +187,8 @@ enrollmentsRouter.post("/drop", async (c) => {
 
 // 3. 获取当前学生交互式课表网格数据
 enrollmentsRouter.get("/my-schedule", async (c) => {
-  const currentUserId = c.req.header("x-user-id") || "usr_stu_1";
+  const rawUser = c.req.header("x-user-id") || c.req.query("studentId");
+  const currentUserId = await resolveStudentId(rawUser);
 
   const myEnrollments = await db.query.enrollments.findMany({
     where: and(

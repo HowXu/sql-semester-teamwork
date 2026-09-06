@@ -1,12 +1,22 @@
-import { Hono } from "hono";
-import { db, enrollments, grades } from "@repo/db";
+import { Hono, type Context } from "hono";
+import { db, enrollments, grades, students } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 import { GradeInputSchema } from "@repo/schema";
 
 export const gradesRouter = new Hono();
 
-gradesRouter.get("/my-grades", async (c) => {
-  const currentUserId = c.req.header("x-user-id") || "usr_stu_1";
+async function resolveStudentId(idOrNo?: string | null): Promise<string> {
+  if (!idOrNo) return "usr_stu_1";
+  if (idOrNo.startsWith("usr_")) return idOrNo;
+  const st = await db.query.students.findFirst({
+    where: eq(students.studentNo, idOrNo)
+  });
+  return st ? st.id : idOrNo;
+}
+
+const getMyGradesHandler = async (c: Context) => {
+  const rawUser = c.req.header("x-user-id") || c.req.query("studentId");
+  const currentUserId = await resolveStudentId(rawUser);
 
   const allMyEnrollments = await db.query.enrollments.findMany({
     where: and(
@@ -69,7 +79,10 @@ gradesRouter.get("/my-grades", async (c) => {
     cumulativeGpa,
     grades: gradeList
   });
-});
+};
+
+gradesRouter.get("/my-grades", getMyGradesHandler);
+gradesRouter.get("/my", getMyGradesHandler);
 
 gradesRouter.post("/submit", async (c) => {
   const body = await c.req.json();
