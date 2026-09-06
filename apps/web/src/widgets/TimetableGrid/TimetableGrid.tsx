@@ -1,9 +1,9 @@
 import { motion } from "motion/react";
 import { type ApiScheduleItem } from "@/shared/api/client";
 import { ScheduleBlock } from "@/entities/schedule/ui/ScheduleBlock";
-import { ConfirmModal } from "@/shared/ui";
+import { ConfirmModal, Button, Badge } from "@/shared/ui";
 import { timetableContainerVariants } from "@/shared/lib/motion";
-import { Calendar, Clock, BookOpen } from "@/shared/icons";
+import { Calendar, Clock, BookOpen, RefreshCw } from "@/shared/icons";
 import { useState } from "react";
 
 export interface TimetableGridProps {
@@ -12,6 +12,8 @@ export interface TimetableGridProps {
   enrolledCount: number;
   onDropCourse: (item: ApiScheduleItem) => void;
   isDropping?: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 const DAYS = [
@@ -45,77 +47,108 @@ export function TimetableGrid({
   enrolledCount,
   onDropCourse,
   isDropping = false,
+  onRefresh,
+  isRefreshing = false,
 }: TimetableGridProps) {
   const [courseToDrop, setCourseToDrop] = useState<ApiScheduleItem | null>(null);
 
   return (
     <div className="space-y-4">
-      {/* Top Banner with Stats */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Calendar className="h-5 w-5" />
+      {/* Top Banner with Stats & Integrated Refresh */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary shadow-2xs">
+            <Calendar className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-foreground">个人学期排课表</h2>
-            <p className="text-xs text-muted-foreground">
+            <h2 className="text-base sm:text-lg font-bold text-foreground">个人学期排课表</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium">
               当前学期修读课程日程分布，点击卡片可查看教学地点与课程信息
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-xs font-mono">
-          <div className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-1.5 text-foreground">
-            <BookOpen className="h-3.5 w-3.5 text-primary" />
-            <span>已修课程：<strong className="text-primary">{enrolledCount}</strong> 门</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-xs sm:text-sm">
+            <Badge variant="outline" className="px-3 py-1 text-xs font-semibold">
+              <BookOpen className="h-3.5 w-3.5 text-primary mr-1" />
+              <span>已修读 <strong className="text-primary font-mono">{enrolledCount}</strong> 门</span>
+            </Badge>
+            <Badge variant="outline" className="px-3 py-1 text-xs font-semibold">
+              <Clock className="h-3.5 w-3.5 text-secondary mr-1" />
+              <span>累计 <strong className="text-secondary font-mono">{totalCredits.toFixed(1)}</strong> 学分</span>
+            </Badge>
           </div>
-          <div className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-1.5 text-foreground">
-            <Clock className="h-3.5 w-3.5 text-secondary" />
-            <span>累计学分：<strong className="text-secondary">{totalCredits.toFixed(1)}</strong> 分</span>
-          </div>
+
+          {onRefresh && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="rounded-xl text-xs font-semibold"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span>刷新课表</span>
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Main Timetable Grid Canvas */}
-      <div className="overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-xs">
-        <div className="min-w-[760px]">
+      <div className="overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-xs no-scrollbar">
+        <div className="min-w-[820px]">
           {/* Header Row: Days of Week */}
-          <div className="grid grid-cols-[70px_repeat(7,1fr)] border-b border-border/80 bg-muted/40 text-center text-xs font-medium text-muted-foreground">
-            <div className="py-2.5 border-r border-border/60">节次 / 时间</div>
+          <div className="grid grid-cols-[110px_repeat(7,1fr)] border-b border-border/80 bg-muted/40 text-center text-xs font-semibold text-muted-foreground">
+            <div className="py-3 border-r border-border/60 flex items-center justify-center gap-1.5 text-foreground font-bold">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>节次 / 时段</span>
+            </div>
             {DAYS.map((d) => (
-              <div key={d.id} className="py-2.5 border-r border-border/60 last:border-r-0 font-semibold text-foreground">
+              <div key={d.id} className="py-3 border-r border-border/60 last:border-r-0 font-bold text-foreground text-sm">
                 {d.name}
               </div>
             ))}
           </div>
 
           {/* Grid Body */}
-          <div className="relative grid grid-cols-[70px_repeat(7,1fr)]">
+          <div className="relative grid grid-cols-[110px_repeat(7,1fr)]">
             {/* Background Grid Cells & Period Timeline */}
-            {PERIODS.map((period) => (
-              <div key={period.id} className="contents">
-                {/* Period sidebar */}
-                <div className="flex flex-col items-center justify-center border-b border-r border-border/60 bg-muted/20 py-2.5 text-center">
-                  <span className="font-mono text-xs font-bold text-foreground">第{period.id}节</span>
-                  <span className="font-mono text-[9px] text-muted-foreground scale-90">{period.time.split(" - ")[0]}</span>
-                </div>
-
-                {/* 7 Day cells */}
-                {DAYS.map((day) => (
+            {PERIODS.map((period) => {
+              const isSectionEnd = period.id === 4 || period.id === 8;
+              return (
+                <div key={period.id} className="contents">
+                  {/* Period sidebar */}
                   <div
-                    key={`${day.id}-${period.id}`}
-                    className="h-14 border-b border-r border-border/40 last:border-r-0 hover:bg-muted/15 transition-colors"
-                  />
-                ))}
-              </div>
-            ))}
+                    className={`flex flex-col items-center justify-center border-r border-border/60 bg-card px-2 py-2 text-center transition-colors ${
+                      isSectionEnd ? "border-b-2 border-b-border" : "border-b border-border/40"
+                    }`}
+                  >
+                    <span className="text-xs font-bold text-foreground tracking-wide">第 {period.id} 节</span>
+                    <span className="font-mono text-[11px] text-muted-foreground font-medium mt-0.5 tracking-tight">
+                      {period.time}
+                    </span>
+                  </div>
+
+                  {/* 7 Day cells */}
+                  {DAYS.map((day) => (
+                    <div
+                      key={`${day.id}-${period.id}`}
+                      className={`h-14 border-r border-border/40 last:border-r-0 hover:bg-muted/10 transition-colors ${
+                        isSectionEnd ? "border-b-2 border-b-border" : "border-b border-border/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+              );
+            })}
 
             {/* Floating Course Blocks Layer */}
             <motion.div
               variants={timetableContainerVariants}
               initial="hidden"
               animate="visible"
-              className="absolute inset-0 grid grid-cols-[70px_repeat(7,1fr)] grid-rows-[repeat(12,56px)] pointer-events-none p-0.5"
+              className="absolute inset-0 grid grid-cols-[110px_repeat(7,1fr)] grid-rows-[repeat(12,56px)] pointer-events-none p-0.5"
             >
               {scheduleItems.map((item) => {
                 const dayCol = item.dayOfWeek + 1; // Col 1 is period time column, day 1 is col 2

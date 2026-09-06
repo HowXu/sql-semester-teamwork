@@ -1,7 +1,7 @@
 import { useTimetableViewModel } from "@/features/timetable/model/useTimetableViewModel";
 import { TimetableGrid } from "@/widgets/TimetableGrid/TimetableGrid";
-import { CheckCircle2, AlertCircle, X, RefreshCw } from "@/shared/icons";
-import { Button, TimetableSkeleton } from "@/shared/ui";
+import { CheckCircle2, AlertCircle, X } from "@/shared/icons";
+import { TimetableSkeleton } from "@/shared/ui";
 
 export function TimetablePage() {
   const { state, actions } = useTimetableViewModel();
@@ -32,18 +32,6 @@ export function TimetablePage() {
         </div>
       )}
 
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={actions.refresh}
-          disabled={state.isLoading}
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${state.isLoading ? "animate-spin" : ""}`} />
-          <span>刷新课表</span>
-        </Button>
-      </div>
-
       {state.isLoading && !schedule ? (
         <TimetableSkeleton />
       ) : (
@@ -53,6 +41,8 @@ export function TimetablePage() {
           enrolledCount={schedule?.enrolledCount || 0}
           onDropCourse={actions.openDropModal}
           isDropping={state.isDropping}
+          onRefresh={actions.refresh}
+          isRefreshing={state.isLoading}
         />
       )}
     </div>
