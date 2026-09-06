@@ -66,4 +66,4 @@ jobs:
             - Windows 10 / 11 64位系统
             - 系统自带 Microsoft Edge WebView2 Runtime
           releaseDraft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') || contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
