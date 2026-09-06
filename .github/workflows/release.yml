@@ -59,8 +59,7 @@ jobs:
             本版本由 GitHub Actions 自动化编译打包。
             
             ### 包含产物
-            - Windows 安装包 (.exe / NSIS)
-            - Windows 离线安装包 (.msi)
+            - Windows 客户端安装包 (.exe / NSIS 安装向导)
             
             ### 运行环境要求
             - Windows 10 / 11 64位系统
