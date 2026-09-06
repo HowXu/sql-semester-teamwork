@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "packages/schema" },
-    { "path": "packages/db" }
+    { "path": "packages/db" },
+    { "path": "apps/server" }
   ]
 }
