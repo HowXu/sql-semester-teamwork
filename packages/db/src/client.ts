@@ -3,9 +3,11 @@ import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema.js";
 import path from "node:path";
 import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 
-// 确保 SQLite 数据库文件存放路径存在
-const dbDir = path.resolve(process.cwd(), process.cwd().endsWith("packages/db") || process.cwd().endsWith("packages\\db") ? "." : "packages/db");
+// 确保 SQLite 数据库文件绝对路径准确指向 packages/db/sqlite.db
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const dbDir = path.resolve(currentDir, "..");
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
