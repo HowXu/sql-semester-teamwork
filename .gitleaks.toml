@@ -1,0 +1,12 @@
+title = "Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist for test fixtures and mock data"
+paths = [
+  '''packages/db/src/seed\.ts''',
+  '''\.env\.example''',
+  '''pnpm-lock\.yaml'''
+]
