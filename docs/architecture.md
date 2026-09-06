@@ -103,3 +103,20 @@ apps/web/src/
 ### 3.2 矢量图标体系 (Zero-Emoji Policy)
 - **全面移除并严禁在界面与代码中使用任何 Emoji 字符**。
 - 全系统使用 `lucide-react` 矢量图标库，并在 `@/shared/icons` 中集中二次导出，保证图标风格一致、尺寸受控、颜色继承系统调色板。
+
+### 3.3 前端双层状态分工规范 (TanStack Query vs Zustand)
+- **服务端状态 (Server State)**：
+  - 范围：课程库、教学班余量、学生真实已选课表、GPA 成绩。
+  - 方案：由 **TanStack Query** 全权管理，借助自动失效 (`invalidateQueries`) 与乐观更新 (Optimistic UI) 保持与 SQLite 数据源的强一致性。
+- **客户端全局状态 (Client State)**：
+  - 范围：模拟登录身份切换（学生/教师/教务）、选课预选清单（预选车）、周排课网格显示偏好。
+  - 方案：由轻量级 **Zustand** 管理，结合 `persist` 中间件实现 `localStorage` 自动无感持久化，避免 React Context 的无效全树重渲染。
+
+### 3.4 纯 CSS 现代样式引擎 (Tailwind CSS v4)
+- 全面采用 Tailwind CSS v4 与 `@tailwindcss/vite` 专用构建集成，彻底摆脱传统 `tailwind.config.ts` 与 PostCSS 复杂中间链路。
+- 原生支持现代浏览器 OKLCH 宽色域颜色空间，通过 `@theme inline` 将 CSS 变量无缝映射至 Tailwind 语义类名中。
+
+### 3.5 SQLite 数据驱动与跨平台零编译保障
+- 放弃因 Node 26 缺少预编译二进制而易编译失败的 `better-sqlite3` 原生 C++ 绑定，全面采用 `@libsql/client` (libSQL) 纯本地模式。
+- 零 C++ 编译环境依赖，无需安装 Visual Studio C++ 构建工具即可在任意 Node.js 环境一键秒级启动。
+

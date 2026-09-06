@@ -6,7 +6,7 @@
 
 ## 1. 持续集成门禁 (CI Pipeline)
 
-CI 流程配置文件位于 `.github/workflows/ci.yml`，在向主分支发起 Pull Request 或直接推送时自动触发。
+CI 流程配置文件位于 `.github/workflows/ci.yml`，在向主分支推送或发起任意 Pull Request（完美兼容 GitHub Stacked PR 各层级间的分段 PR）时自动触发执行。
 
 ### 1.1 关键检查任务
 
@@ -21,7 +21,9 @@ CI 流程配置文件位于 `.github/workflows/ci.yml`，在向主分支发起 P
    - 保证 0 warning、0 error。
 4. **构建产物验证 (Build Verification)**：
    - 验证 `pnpm run build` 是否在全包范围内正常编译。
-   - 检查前端 Vite 是否按照预设 `manualChunks` 成功输出分包产物。
+   - 检查前端 Vite 是否按照预设 `manualChunks` 成功输出分包产物（`vendor-react`、`vendor-tanstack`、`vendor-ui`、`vendor-motion`）。
+5. **数据库模型与种子数据验证 (Database Integrity)**：
+   - 执行 `pnpm db:seed`，验证 SQLite 模型、Zod Schema 与 Drizzle ORM 的数据一致性，确保每次提交均可成功建立数据库初始状态。
 
 ---
 

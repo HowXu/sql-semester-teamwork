@@ -88,15 +88,16 @@ gh stack alias
 
 ## 3. 本项目初始化分层设计 (Stack 划分)
 
-为保证项目初始化的审查清晰度，我们设计为以下 5 层递进 Stack：
+为保证项目初始化的审查清晰度与原子化隔离，我们设计为以下 6 层递进 Stack：
 
 ```text
 main (trunk)
-  └── feat/stack-1-infra-and-docs    (Layer 1: Monorepo 骨架、代码规范、文档、门禁)
-        └── feat/stack-2-schema-and-db (Layer 2: 共享 Zod Schema、Drizzle SQLite 模型与种子)
-              └── feat/stack-3-backend-api  (Layer 3: Hono.js API、并发防超卖事务、排课冲突检测)
-                    └── feat/stack-4-frontend-core (Layer 4: Vite + React 19 + TanStack + shadcn + motion)
-                          └── feat/stack-5-desktop-and-ci (Layer 5: Tauri 2.0 桌面配置、CI/CD 自动化流水线)
+  └── feat/stack-1-infra-and-docs       (Layer 1: Monorepo 骨架、代码规范、文档、门禁)
+        └── feat/stack-2-schema-and-db    (Layer 2: 共享 Zod Schema、Drizzle SQLite 模型与种子)
+              └── feat/stack-3-backend-api     (Layer 3: Hono.js API、并发防超卖事务、排课冲突检测)
+                    └── feat/stack-4-frontend-core    (Layer 4: Vite + React 19 + Tailwind v4 + Zustand + Motion)
+                          └── feat/stack-5-desktop-and-ci   (Layer 5: Tauri 2.0 桌面配置、CI/CD 自动化流水线)
+                                └── feat/stack-6-docs-and-ci-polish (Layer 6: 文档同步、CI/CD 强化与 README 完善)
 ```
 
 每层均可独立 review、独立验证，并保留完整的三点论提交记录。
