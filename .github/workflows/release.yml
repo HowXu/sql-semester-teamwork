@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '发布版本号 (例如 v1.0.0)'
+        required: true
+        default: 'v1.0.0'
 
 jobs:
   build-tauri-windows:
@@ -16,16 +22,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10.13.1
           run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -39,12 +46,13 @@ jobs:
         run: pnpm build:web
 
       - name: Build Tauri Desktop Package
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: '教务选课系统 ${{ github.ref_name }}'
+          projectPath: apps/desktop
+          tagName: ${{ github.event.inputs.version || github.ref_name }}
+          releaseName: '教务选课系统 ${{ github.event.inputs.version || github.ref_name }}'
           releaseBody: |
             ## 教务选课系统 Windows 客户端自动化发布
             
@@ -59,4 +67,3 @@ jobs:
             - 系统自带 Microsoft Edge WebView2 Runtime
           releaseDraft: false
           prerelease: false
-          args: --config apps/desktop/src-tauri/tauri.conf.json
