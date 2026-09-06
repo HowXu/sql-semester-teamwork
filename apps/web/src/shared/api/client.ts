@@ -103,20 +103,30 @@ const getApiBase = () => {
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const base = getApiBase();
-  const res = await fetch(`${base}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-    ...options,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 1200);
 
-  const data = await res.json();
-  if (!res.ok || (data && data.success === false)) {
-    const errorMsg = data?.error || `HTTP 错误 ${res.status}: ${res.statusText}`;
-    throw new Error(errorMsg);
+  try {
+    const res = await fetch(`${base}${path}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+      signal: options?.signal || controller.signal,
+      ...options,
+    });
+    clearTimeout(timeoutId);
+
+    const data = await res.json();
+    if (!res.ok || (data && data.success === false)) {
+      const errorMsg = data?.error || `HTTP 错误 ${res.status}: ${res.statusText}`;
+      throw new Error(errorMsg);
+    }
+    return data as T;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
   }
-  return data as T;
 }
 
 export const api = {
