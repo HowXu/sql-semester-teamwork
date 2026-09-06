@@ -99,9 +99,9 @@ pnpm tauri dev
 
 ## 5. 详细工程技术文档
 
-- 架构设计详情：[系统整体架构与工程规范](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/architecture.md)
-- 界面与设计系统：[设计系统与视觉规范 (TweakCN Light Green)](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/design-system.md)
-- 数据库与并发：[数据库模型与高级特性设计](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/database-design.md)
-- 代码质量与规范：[工程措施与代码质量标准](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/engineering-standards.md)
-- 分支与门禁指南：[Git 提交规范与 GitHub Stacked PR 工作流指南](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/git-workflow.md)
-- CI/CD 与发版：[CI 门禁与自动化 Release 发版说明](file:///c:/Helianthus/SXP-Simon/杂/sql-semester-teamwork/docs/ci-cd.md)
+- 架构设计详情：[系统整体架构与工程规范](./docs/architecture.md)
+- 界面与设计系统：[设计系统与视觉规范 (TweakCN Light Green)](./docs/design-system.md)
+- 数据库与并发：[数据库模型与高级特性设计](./docs/database-design.md)
+- 代码质量与规范：[工程措施与代码质量标准](./docs/engineering-standards.md)
+- 分支与门禁指南：[Git 提交规范与 GitHub Stacked PR 工作流指南](./docs/git-workflow.md)
+- CI/CD 与发版：[CI 门禁与自动化 Release 发版说明](./docs/ci-cd.md)
