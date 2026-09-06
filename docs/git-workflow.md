@@ -47,7 +47,11 @@ feat(选课系统): 完善选课并发事务与剩余容量原子递减逻辑
 
 ## 2. GitHub Stacked PR (`gh stack`) 协作指南
 
-根据 [GitHub Stack PR 实战指南](https://blog.cosine.ren/post/github-stacked-pull-requests-guide)，本项目采用分层提交与分段 Review 机制，避免上千行单次大 PR 导致审查困难。
+在开展多层 Stack PR 开发前，建议查阅以下权威资料：
+- **GitHub 官方技术文档**：[Stacked pull requests - GitHub Docs](https://docs.github.com/en/pull-requests/how-tos/stacked-pull-requests)
+- **社区实战博客指南**：[GitHub Stack PR 实战指南：用 gh stack 拆分、同步与合并 PR - 余弦の博客](https://blog.cosine.ren/post/github-stacked-pull-requests-guide)
+
+本项目全面采用上述分层提交与分段 Review 机制，将复杂功能拆分为线性递进的小 PR，避免上千行单次大 PR 导致审查困难。
 
 ### 2.1 核心概念
 - **trunk**：目标主干分支，通常为 `main`。

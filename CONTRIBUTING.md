@@ -40,13 +40,20 @@ feat(选课系统): 完善选课并发事务与剩余容量原子递减逻辑
 
 ## 3. GitHub Stacked PR (`gh stack`) 协作流
 
-为了便于审查并避免大型巨型 PR，复杂功能的开发请使用 GitHub 官方 `gh stack` 工具链分层提报：
+为了便于代码审查并避免单次提交几千行的大型 PR，本项目推荐采用 GitHub 官方分层 Stacked PR 模式。
 
+### 3.1 权威参考资料
+在开展 Stack PR 开发前，请参考以下权威资料了解完整工作机制与命令详解：
+- **GitHub 官方技术文档**：[Stacked pull requests - GitHub Docs](https://docs.github.com/en/pull-requests/how-tos/stacked-pull-requests)
+- **社区实战博客指南**：[GitHub Stack PR 实战指南：用 gh stack 拆分、同步与合并 PR - 余弦の博客](https://blog.cosine.ren/post/github-stacked-pull-requests-guide)
+- **本项目分支规划与约定**：[Git 提交规范与 GitHub Stacked PR 工作流指南](./docs/git-workflow.md)
+
+### 3.2 常用操作速查
 ```bash
 # 1. 在 trunk (main) 上创建 bottom 分支
 gh stack init feat/layer-1-infra
 
-# 2. 完成当前层代码并提交（遵从三点论）
+# 2. 完成当前层代码并提交（严格遵循中文三点论）
 git add .
 git commit -m "feat(基建): ..."
 
@@ -60,7 +67,7 @@ gh stack view --short
 gh stack submit
 ```
 
-若对底层分支进行了修改，请执行 `gh stack rebase --upstack` 级联同步上层分支。详细操作步骤请参阅 [Git 工作流与 Stack PR 指南](./docs/git-workflow.md)。
+若对底层分支进行了修改，请在对应分支执行 `gh stack rebase --upstack` 级联同步所有上层分支。
 
 ---
 
