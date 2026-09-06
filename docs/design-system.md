@@ -243,11 +243,90 @@ rounded-xl border border-input bg-background/50 px-3.5 py-2 text-sm focus-visibl
 
 ---
 
-## 6. [CHECKLIST] 交付前自检清单
+## 6. Motion 动效体系与合理应用规范 (Rational Motion Design)
+
+本项目采用 `motion` 作为交互与物理动效驱动引擎。**动效的引入必须克制、精准、符合物理直觉，严禁为了炫技而引发视觉疲劳或降低操作效率。**
+
+### 6.1 动效合理性四大核心原则
+1. **意图明确 (Purpose-Driven)**：每一个动效必须承载确定的功能意图（引导注意力、反馈状态变更、呈现空间位置层级），禁止纯装饰性的无意义抖动或漫长位移。
+2. **物理直觉 (Spring Physics)**：摒弃生硬机械的线性过渡，全面采用弹簧物理模型（Spring），模拟自然界惯性与阻尼，使界面触感轻盈自然。
+3. **极速响应 (Snappy Response)**：交互反馈时间必须严控在 **150ms ~ 300ms** 以内，绝不可因为等待动画播放完毕而阻塞用户的下一步操作。
+4. **无障碍降级 (Reduced Motion)**：全系统严格遵从操作系统的减弱动态偏好（`prefers-reduced-motion`）。当用户开启此选项时，所有位置平移（translate/scale）自动降级为纯透明度淡入淡出（fade only）。
+
+### 6.2 教务系统专属合理动效场景与代码级 Token
+
+#### 场景 1：排课冲突警示抖动 (Conflict Shake)
+- **业务场景**：选课时检测到上课时间重叠或先修课程缺失。
+- **动效意图**：在不阻断用户视线的前提下，通过轻微振动和警示高亮吸引注意力，直观告知“此处时间重叠受阻”。
+- **标准实现**：
+```tsx
+export const conflictShakeVariants = {
+  idle: { x: 0 },
+  conflict: {
+    x: [0, -6, 6, -4, 4, -2, 2, 0],
+    transition: { duration: 0.35, ease: "easeInOut" }
+  }
+};
+```
+
+#### 场景 2：选课容量与并发状态流转 (Capacity Morph)
+- **业务场景**：其他同学选课导致剩余容量实时递减，或学生成功抢课。
+- **动效意图**：容量进度条的宽度改变采用流动插值，数字滚动刷新，让数据变动清晰可感知。
+- **标准实现**：
+```tsx
+<motion.div 
+  className="h-full bg-primary"
+  initial={false}
+  animate={{ width: `${(current / max) * 100}%` }}
+  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+/>
+```
+
+#### 场景 3：卡片交互与上下文保持 (Shared Layout & Float)
+- **业务场景**：鼠标悬停在课程卡片上，或点击卡片展开教学大纲详情模态框。
+- **动效意图**：Hover 时微微浮起产生触控深度；展开时通过 `layoutId` 保持空间上下文连续，避免突兀弹窗。
+- **标准实现**：
+```tsx
+export const cardInteractiveProps = {
+  whileHover: { y: -2, transition: { duration: 0.2, ease: "easeOut" } },
+  whileTap: { scale: 0.98, transition: { duration: 0.1 } }
+};
+```
+
+#### 场景 4：周排课网格平滑交错入场 (Timetable Stagger)
+- **业务场景**：切换单双周或切换学期时，重新加载 7x12 课表网格。
+- **动效意图**：通过极轻微的错峰淡入（staggerChildren: 0.02），消除全屏突兀白屏刷新感。
+- **标准实现**：
+```tsx
+export const timetableContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.02, delayChildren: 0.05 }
+  }
+};
+
+export const timetableCellVariants = {
+  hidden: { opacity: 0, scale: 0.96 },
+  visible: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
+};
+```
+
+### 6.3 动效工程底线与禁止项 (Motion Forbidden)
+- **绝对禁止全页面长时间遮罩动画**（超过 400ms 的入场等待一律禁止）。
+- **绝对禁止在大型滚动列表（如 200 条课程列表）中对每行都挂载昂贵的复杂重绘动画**，只能对视口内可见卡片使用轻量 GPU 硬件加速变换。
+- **绝对禁止动画直接修改 `width` / `height` / `top` / `left`** 导致浏览器重排（Reflow），必须通过 `motion` 的 `layout` 属性利用 GPU Transform 投影机制。
+
+---
+
+## 7. [CHECKLIST] 交付前自检清单
 
 - [ ] 全界面**绝无任何 Emoji 符号**，状态标识全面使用 `lucide-react` 矢量图标。
 - [ ] 卡片与弹窗圆角一致采用 `rounded-2xl`（1rem），内部控件采用 `rounded-xl`。
 - [ ] 按钮具备明显的 Hover 光泽与 Active 轻微缩放（`active:scale-[0.98]`）。
+- [ ] 动效使用严格符合合理性原则，严禁无意义的过度装饰动画；关键反馈时间在 300ms 内。
+- [ ] 动效全面支持 `prefers-reduced-motion` 降级，避免引发眩晕。
 - [ ] 文本层级清晰，数值与代码使用 `font-mono`。
 - [ ] 配色基于 OKLCH 主题变量，浅色温润纯净，深色雅致克制。
 - [ ] 响应式布局自适应移动端、平板与桌面端。
+

@@ -83,6 +83,7 @@ apps/web/src/
 - **View（视图）**：
   - 纯函数式 React 组件（如 `views/*` 与 `widgets/*`）。
   - 专注于 UI 排版、样式表现以及基于 `motion` 的入场/退场与布局平滑过渡，不直接书写数据转换与网络请求细节。
+  - **动效合理性原则**：动效必须承载确定的业务意图（如排课冲突轻度抖动、容量变化平滑拉伸、卡片详情共享展开），严禁无意义的眩目动画；交互反馈严控在 300ms 以内，且全系统尊重 `prefers-reduced-motion` 操作系统减弱动态设置。详情参见 [docs/design-system.md](./design-system.md)。
 
 ### 2.3 Atomic Design 组件归类准则
 
