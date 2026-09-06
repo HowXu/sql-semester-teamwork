@@ -25,4 +25,5 @@ node_modules
 *.db-shm
 dist
 .drizzle
+*.tsbuildinfo
 
