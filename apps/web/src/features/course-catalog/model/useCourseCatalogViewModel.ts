@@ -4,6 +4,8 @@ import { api, type ApiOffering } from "@/shared/api/client";
 import { useUserStore } from "@/shared/stores/useUserStore";
 import { useCourseDraftStore } from "@/shared/stores/useCourseDraftStore";
 
+type OfferingsCache = { offerings: ApiOffering[] };
+
 export function useCourseCatalogViewModel() {
   const queryClient = useQueryClient();
   const { currentUser } = useUserStore();
@@ -18,18 +20,16 @@ export function useCourseCatalogViewModel() {
 
   const { drafts, addDraft, removeDraft } = useCourseDraftStore();
 
-  // Optimistic tracking sets
+  // Optimistic 集合仅用于"已修读" badge 与 conflictMap 跳过;不再影响 capacity
   const [optimisticEnrolledIds, setOptimisticEnrolledIds] = useState<Set<string>>(new Set());
   const [optimisticDroppedIds, setOptimisticDroppedIds] = useState<Set<string>>(new Set());
   const [pendingOfferingId, setPendingOfferingId] = useState<string | null>(null);
 
-  // 1. Fetch available course offerings
   const offeringsQuery = useQuery({
     queryKey: ["offerings"],
     queryFn: () => api.getOfferings(),
   });
 
-  // 2. Fetch student's current schedule to check enrolled status and conflicts
   const scheduleQuery = useQuery({
     queryKey: ["my-schedule", studentId],
     queryFn: () => api.getMySchedule(studentId),
@@ -47,12 +47,12 @@ export function useCourseCatalogViewModel() {
     return ids;
   }, [scheduleQuery.data, optimisticEnrolledIds, optimisticDroppedIds]);
 
-  // Compute time conflict helper
   const conflictMap = useMemo(() => {
     const map = new Map<string, string>();
-    if (!scheduleQuery.data?.items || !offeringsQuery.data?.offerings) return map;
+    const offerings = offeringsQuery.data?.offerings ?? [];
+    if (!scheduleQuery.data?.items) return map;
 
-    for (const offering of offeringsQuery.data.offerings) {
+    for (const offering of offerings) {
       if (enrolledOfferingIds.has(offering.id)) continue;
       for (const enrolled of scheduleQuery.data.items) {
         if (optimisticDroppedIds.has(enrolled.offeringId)) continue;
@@ -73,39 +73,31 @@ export function useCourseCatalogViewModel() {
     return map;
   }, [offeringsQuery.data, scheduleQuery.data, enrolledOfferingIds, optimisticDroppedIds]);
 
-  // Filtered offerings with optimistic capacity adjustment
+  // 直接读 server 真实 capacity;不再叠加乐观 ±1(避免 +2/-2 漂移)
   const filteredOfferings = useMemo(() => {
-    if (!offeringsQuery.data?.offerings) return [];
-    return offeringsQuery.data.offerings.map((o) => {
-      let cap = o.currentCapacity;
-      if (optimisticEnrolledIds.has(o.id) && !scheduleQuery.data?.items?.some((i) => i.offeringId === o.id)) {
-        cap = Math.min(o.maxCapacity, cap + 1);
-      }
-      if (optimisticDroppedIds.has(o.id)) {
-        cap = Math.max(0, cap - 1);
-      }
-      return { ...o, currentCapacity: cap };
-    }).filter((o) => {
-      const matchDept =
-        selectedDepartment === "all" || o.department === selectedDepartment;
-      const lowerQ = searchTerm.toLowerCase().trim();
-      const matchSearch =
-        !lowerQ ||
-        o.courseName.toLowerCase().includes(lowerQ) ||
-        o.courseCode.toLowerCase().includes(lowerQ) ||
-        o.teacherName.toLowerCase().includes(lowerQ);
-      return matchDept && matchSearch;
-    });
-  }, [offeringsQuery.data, selectedDepartment, searchTerm, optimisticEnrolledIds, optimisticDroppedIds, scheduleQuery.data]);
+    const offerings = offeringsQuery.data?.offerings ?? [];
+    return offerings
+      .map((o) => ({ ...o }))
+      .filter((o) => {
+        const matchDept =
+          selectedDepartment === "all" || o.department === selectedDepartment;
+        const lowerQ = searchTerm.toLowerCase().trim();
+        const matchSearch =
+          !lowerQ ||
+          o.courseName.toLowerCase().includes(lowerQ) ||
+          o.courseCode.toLowerCase().includes(lowerQ) ||
+          o.teacherName.toLowerCase().includes(lowerQ);
+        return matchDept && matchSearch;
+      });
+  }, [offeringsQuery.data, selectedDepartment, searchTerm]);
 
-  // All distinct departments for filter pills
   const departments = useMemo(() => {
-    if (!offeringsQuery.data?.offerings) return [];
-    const depts = new Set(offeringsQuery.data.offerings.map((o) => o.department));
+    const offerings = offeringsQuery.data?.offerings ?? [];
+    const depts = new Set(offerings.map((o) => o.department));
     return Array.from(depts);
   }, [offeringsQuery.data]);
 
-  // Enroll Mutation with instant optimistic feedback
+  // Enroll Mutation:服务端驱动缓存更新,消除 +2 漂移
   const enrollMutation = useMutation({
     mutationFn: (offering: ApiOffering) => {
       setPendingOfferingId(offering.id);
@@ -117,14 +109,35 @@ export function useCourseCatalogViewModel() {
       });
       return api.enroll(studentId, offering.id);
     },
+    onMutate: async (offering: ApiOffering) => {
+      await queryClient.cancelQueries({ queryKey: ["offerings"] });
+      const previous = queryClient.getQueryData<OfferingsCache>(["offerings"]);
+      if (previous) {
+        queryClient.setQueryData<OfferingsCache>(["offerings"], (old) => ({
+          offerings: (old?.offerings ?? []).map((o) =>
+            o.id === offering.id
+              ? {
+                  ...o,
+                  currentCapacity: Math.min(o.maxCapacity, o.currentCapacity + 1),
+                }
+              : o
+          ),
+        }));
+      }
+      return { previous };
+    },
     onSuccess: (data) => {
       setNotification({ type: "success", message: data.message });
-      void queryClient.invalidateQueries({ queryKey: ["offerings"] });
+      // 只 invalidate schedule;offerings cache 已同步,无需再拉
       void queryClient.invalidateQueries({ queryKey: ["my-schedule", studentId] });
       void queryClient.invalidateQueries({ queryKey: ["my-grades", studentId] });
       void queryClient.invalidateQueries({ queryKey: ["stats-overview"] });
     },
-    onError: (err: Error, offering) => {
+    onError: (err: Error, offering, context) => {
+      // 回滚 offerings cache 到 onMutate 前的状态
+      if (context?.previous) {
+        queryClient.setQueryData<OfferingsCache>(["offerings"], context.previous);
+      }
       setOptimisticEnrolledIds((prev) => {
         const next = new Set(prev);
         next.delete(offering.id);
@@ -137,7 +150,7 @@ export function useCourseCatalogViewModel() {
     },
   });
 
-  // Drop Mutation with instant optimistic feedback
+  // Drop Mutation:服务端驱动缓存更新,消除 -2 漂移
   const dropMutation = useMutation({
     mutationFn: (offering: ApiOffering) => {
       setPendingOfferingId(offering.id);
@@ -149,14 +162,30 @@ export function useCourseCatalogViewModel() {
       });
       return api.drop(studentId, offering.id);
     },
+    onMutate: async (offering: ApiOffering) => {
+      await queryClient.cancelQueries({ queryKey: ["offerings"] });
+      const previous = queryClient.getQueryData<OfferingsCache>(["offerings"]);
+      if (previous) {
+        queryClient.setQueryData<OfferingsCache>(["offerings"], (old) => ({
+          offerings: (old?.offerings ?? []).map((o) =>
+            o.id === offering.id
+              ? { ...o, currentCapacity: Math.max(0, o.currentCapacity - 1) }
+              : o
+          ),
+        }));
+      }
+      return { previous };
+    },
     onSuccess: (data) => {
       setNotification({ type: "success", message: data.message });
-      void queryClient.invalidateQueries({ queryKey: ["offerings"] });
       void queryClient.invalidateQueries({ queryKey: ["my-schedule", studentId] });
       void queryClient.invalidateQueries({ queryKey: ["my-grades", studentId] });
       void queryClient.invalidateQueries({ queryKey: ["stats-overview"] });
     },
-    onError: (err: Error, offering) => {
+    onError: (err: Error, offering, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData<OfferingsCache>(["offerings"], context.previous);
+      }
       setOptimisticDroppedIds((prev) => {
         const next = new Set(prev);
         next.delete(offering.id);

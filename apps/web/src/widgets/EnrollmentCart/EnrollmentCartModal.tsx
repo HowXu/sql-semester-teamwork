@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useCourseDraftStore, type DraftOffering } from "@/shared/stores/useCourseDraftStore";
 import { useUserStore } from "@/shared/stores/useUserStore";
-import { api } from "@/shared/api/client";
+import { api, type ApiOffering } from "@/shared/api/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { ShoppingCart, X, Trash2, CheckCircle2, AlertCircle, Loader2 } from "@/shared/icons";
 import { Button, Badge } from "@/shared/ui";
+
+type OfferingsCache = { offerings: ApiOffering[] };
 
 const WEEKDAYS = ["", "周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
@@ -46,6 +48,16 @@ export function EnrollmentCartModal() {
       }
       try {
         const res = await api.enroll(studentId, draft.id);
+
+        // 每条 enroll 成功后立即给 offerings cache 写 +1(进度可见)
+        queryClient.setQueryData<OfferingsCache>(["offerings"], (old) => ({
+          offerings: (old?.offerings ?? []).map((o) =>
+            o.id === draft.id
+              ? { ...o, currentCapacity: Math.min(o.maxCapacity, o.currentCapacity + 1) }
+              : o
+          ),
+        }));
+
         outcomes.push({
           courseName: draft.courseName,
           success: true,
@@ -65,7 +77,6 @@ export function EnrollmentCartModal() {
     setResults(outcomes);
     setIsSubmitting(false);
 
-    void queryClient.invalidateQueries({ queryKey: ["offerings"] });
     void queryClient.invalidateQueries({ queryKey: ["my-schedule", studentId] });
     void queryClient.invalidateQueries({ queryKey: ["my-grades", studentId] });
     void queryClient.invalidateQueries({ queryKey: ["stats-overview"] });

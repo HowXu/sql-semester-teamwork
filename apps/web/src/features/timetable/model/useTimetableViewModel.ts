@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, type ApiScheduleItem, type ApiScheduleResponse } from "@/shared/api/client";
+import { api, type ApiScheduleItem, type ApiScheduleResponse, type ApiOffering } from "@/shared/api/client";
 import { useUserStore } from "@/shared/stores/useUserStore";
+
+type OfferingsCache = { offerings: ApiOffering[] };
 
 export function useTimetableViewModel() {
   const queryClient = useQueryClient();
@@ -23,7 +25,11 @@ export function useTimetableViewModel() {
     mutationFn: (offeringId: string) => api.drop(studentId, offeringId),
     onMutate: async (offeringId: string) => {
       await queryClient.cancelQueries({ queryKey: ["my-schedule", studentId] });
+      await queryClient.cancelQueries({ queryKey: ["offerings"] });
       const previousSchedule = queryClient.getQueryData<ApiScheduleResponse>(["my-schedule", studentId]);
+      const previousOfferings = queryClient.getQueryData<OfferingsCache>(["offerings"]);
+
+      // 同步更新 schedule
       if (previousSchedule) {
         const nextItems = previousSchedule.items.filter((it) => it.offeringId !== offeringId);
         const nextMatrix = previousSchedule.scheduleMatrix.map((day) =>
@@ -37,19 +43,33 @@ export function useTimetableViewModel() {
           scheduleMatrix: nextMatrix,
         });
       }
-      return { previousSchedule };
+
+      // 同步更新 offerings cache:当前 offering 的 currentCapacity -1
+      if (previousOfferings) {
+        queryClient.setQueryData<OfferingsCache>(["offerings"], (old) => ({
+          offerings: (old?.offerings ?? []).map((o) =>
+            o.id === offeringId
+              ? { ...o, currentCapacity: Math.max(0, o.currentCapacity - 1) }
+              : o
+          ),
+        }));
+      }
+
+      return { previousSchedule, previousOfferings };
     },
     onSuccess: (data) => {
       setNotification({ type: "success", message: data.message });
       setCourseToDrop(null);
-      void queryClient.invalidateQueries({ queryKey: ["my-schedule", studentId] });
-      void queryClient.invalidateQueries({ queryKey: ["offerings"] });
+      // schedule 与 offerings cache 已在 onMutate 同步,这里只 invalidate grades 与 stats
       void queryClient.invalidateQueries({ queryKey: ["my-grades", studentId] });
       void queryClient.invalidateQueries({ queryKey: ["stats-overview"] });
     },
     onError: (err: Error, _offeringId, context) => {
       if (context?.previousSchedule) {
         queryClient.setQueryData(["my-schedule", studentId], context.previousSchedule);
+      }
+      if (context?.previousOfferings) {
+        queryClient.setQueryData<OfferingsCache>(["offerings"], context.previousOfferings);
       }
       setNotification({ type: "error", message: err.message });
     },
