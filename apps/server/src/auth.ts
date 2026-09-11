@@ -8,9 +8,23 @@ import { log } from "./logger.js";
 export const authRouter = new Hono();
 
 authRouter.post("/login", async (c) => {
-  const body = await c.req.json();
+  log.info("[POST /api/auth/login] 请求开始", {
+    userId: c.req.header("x-user-id") ?? "anonymous",
+  });
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch (err) {
+    log.fail("[POST /api/auth/login] 请求体解析失败", {
+      reason: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
+  }
+
   const parsed = LoginInputSchema.safeParse(body);
   if (!parsed.success) {
+    log.fail("[POST /api/auth/login] 参数格式校验失败", { details: parsed.error.format() });
     return c.json({ error: "参数格式不正确", details: parsed.error.format() }, 400);
   }
 

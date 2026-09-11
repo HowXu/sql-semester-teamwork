@@ -87,7 +87,20 @@ gradesRouter.get("/my-grades", getMyGradesHandler);
 gradesRouter.get("/my", getMyGradesHandler);
 
 gradesRouter.post("/submit", async (c) => {
-  const body = await c.req.json();
+  log.info("[POST /api/grades/submit] 请求开始", {
+    userId: c.req.header("x-user-id") ?? "anonymous",
+  });
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch (err) {
+    log.fail("[POST /api/grades/submit] 请求体解析失败", {
+      reason: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
+  }
+
   const parsed = GradeInputSchema.safeParse(body);
   if (!parsed.success) {
     log.fail("[POST /api/grades/submit] 参数校验失败", { details: parsed.error.format() });
