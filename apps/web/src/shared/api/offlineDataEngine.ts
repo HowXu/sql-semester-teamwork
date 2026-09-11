@@ -109,7 +109,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 1,
     endPeriod: 2,
     maxCapacity: 45,
-    currentCapacity: 2,
+    currentCapacity: 42,
     courseName: "数据库系统设计与实现",
     courseCode: "CS201",
     department: "计算机科学与技术学院",
@@ -126,7 +126,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 3,
     endPeriod: 4,
     maxCapacity: 50,
-    currentCapacity: 2,
+    currentCapacity: 48,
     courseName: "数据结构与高级算法",
     courseCode: "CS202",
     department: "计算机科学与技术学院",
@@ -143,7 +143,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 5,
     endPeriod: 6,
     maxCapacity: 40,
-    currentCapacity: 2,
+    currentCapacity: 35,
     courseName: "操作系统核心原理",
     courseCode: "CS301",
     department: "计算机科学与技术学院",
@@ -160,7 +160,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 1,
     endPeriod: 2,
     maxCapacity: 60,
-    currentCapacity: 2,
+    currentCapacity: 30,
     courseName: "计算机网络与分布式系统",
     courseCode: "CS302",
     department: "计算机科学与技术学院",
@@ -177,7 +177,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 3,
     endPeriod: 4,
     maxCapacity: 35,
-    currentCapacity: 2,
+    currentCapacity: 35,
     courseName: "敏捷软件工程与DevOps",
     courseCode: "SE201",
     department: "软件工程学院",
@@ -194,7 +194,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 7,
     endPeriod: 8,
     maxCapacity: 40,
-    currentCapacity: 0,
+    currentCapacity: 18,
     courseName: "现代全栈Web开发技术",
     courseCode: "SE202",
     department: "软件工程学院",
@@ -211,7 +211,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 3,
     endPeriod: 4,
     maxCapacity: 50,
-    currentCapacity: 0,
+    currentCapacity: 46,
     courseName: "机器学习与模式识别",
     courseCode: "AI301",
     department: "数据科学与大数据学院",
@@ -228,7 +228,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 5,
     endPeriod: 6,
     maxCapacity: 30,
-    currentCapacity: 0,
+    currentCapacity: 12,
     courseName: "信息安全与应用密码学",
     courseCode: "SEC201",
     department: "网络空间安全学院",
@@ -237,18 +237,36 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
   },
 ];
 
-const INITIAL_ENROLLMENTS = [
+const INITIAL_ENROLLMENTS: StoredData["enrollments"] = [
+  // 李明 (20240101) 演示课程与成绩
   { id: "enr_1", studentId: "20240101", offeringId: "off_db_01", enrolledAt: Date.now() - 86400000 * 3, score: 92.5, gradePoint: 4.25 },
   { id: "enr_2", studentId: "20240101", offeringId: "off_ds_01", enrolledAt: Date.now() - 86400000 * 2, score: 88.0, gradePoint: 3.80 },
   { id: "enr_3", studentId: "20240101", offeringId: "off_net_01", enrolledAt: Date.now() - 86400000 * 1, score: 91.0, gradePoint: 4.10 },
   { id: "enr_1b", studentId: "2024001", offeringId: "off_db_01", enrolledAt: Date.now() - 86400000 * 3, score: 92.5, gradePoint: 4.25 },
   { id: "enr_2b", studentId: "2024001", offeringId: "off_ds_01", enrolledAt: Date.now() - 86400000 * 2, score: 88.0, gradePoint: 3.80 },
   { id: "enr_3b", studentId: "2024001", offeringId: "off_net_01", enrolledAt: Date.now() - 86400000 * 1, score: 91.0, gradePoint: 4.10 },
-  { id: "enr_4", studentId: "20240102", offeringId: "off_os_01", enrolledAt: Date.now() - 86400000 * 2, score: 95.0, gradePoint: 4.50 },
-  { id: "enr_5", studentId: "20240102", offeringId: "off_se_01", enrolledAt: Date.now() - 86400000 * 1, score: 86.5, gradePoint: 3.65 },
-  { id: "enr_4b", studentId: "2024002", offeringId: "off_os_01", enrolledAt: Date.now() - 86400000 * 2, score: 95.0, gradePoint: 4.50 },
-  { id: "enr_5b", studentId: "2024002", offeringId: "off_se_01", enrolledAt: Date.now() - 86400000 * 1, score: 86.5, gradePoint: 3.65 },
 ];
+
+// 补充批量 mock 学生的离线选课，支撑满额/临界抢课体验
+const addOfflineMock = (offeringId: string, count: number) => {
+  for (let i = 1; i <= count; i++) {
+    INITIAL_ENROLLMENTS.push({
+      id: `enr_${offeringId}_m${i}`,
+      studentId: `mock_student_${i}`,
+      offeringId,
+      enrolledAt: Date.now() - 86400000 * 2,
+    });
+  }
+};
+
+addOfflineMock("off_se_01", 35); // 35/35 (满额)
+addOfflineMock("off_ds_01", 47); // 47 + 李明 = 48/50
+addOfflineMock("off_db_01", 41); // 41 + 李明 = 42/45
+addOfflineMock("off_net_01", 29); // 29 + 李明 = 30/60
+addOfflineMock("off_os_01", 35); // 35/40
+addOfflineMock("off_web_01", 18); // 18/40
+addOfflineMock("off_ai_01", 46); // 46/50
+addOfflineMock("off_sec_01", 12); // 12/30
 
 function loadStoredData(): StoredData {
   try {
