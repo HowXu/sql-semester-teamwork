@@ -10,7 +10,16 @@ export const enrollmentsRouter = new Hono();
 // 1. 原子选课（抢课）接口 - 防并发超卖与时间冲突校验
 enrollmentsRouter.post("/enroll", async (c) => {
   const rawUser = c.req.header("x-user-id");
-  const body = await c.req.json();
+  let body: { [key: string]: string | undefined };
+  try {
+    body = await c.req.json();
+  } catch (err) {
+    log.fail("[POST /api/enrollments/enroll] 请求体解析失败", {
+      userId: rawUser ?? "anonymous",
+      reason: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
+  }
   const currentUserId = await resolveStudentId(body.studentId || rawUser);
 
   log.info("[POST /api/enrollments/enroll] 抢课开始", {
@@ -167,7 +176,16 @@ enrollmentsRouter.post("/enroll", async (c) => {
 // 2. 退课接口 - 恢复剩余名额
 enrollmentsRouter.post("/drop", async (c) => {
   const rawUser = c.req.header("x-user-id");
-  const body = await c.req.json();
+  let body: { [key: string]: string | undefined };
+  try {
+    body = await c.req.json();
+  } catch (err) {
+    log.fail("[POST /api/enrollments/drop] 请求体解析失败", {
+      userId: rawUser ?? "anonymous",
+      reason: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
+  }
   const currentUserId = await resolveStudentId(body.studentId || rawUser);
 
   const enrollmentId = body.enrollmentId;
@@ -188,7 +206,7 @@ enrollmentsRouter.post("/drop", async (c) => {
 
   const enr = await db.query.enrollments.findFirst({
     where: and(
-      enrollmentId ? eq(enrollments.id, enrollmentId) : eq(enrollments.offeringId, offeringId),
+      enrollmentId ? eq(enrollments.id, enrollmentId) : eq(enrollments.offeringId, offeringId!),
       eq(enrollments.studentId, currentUserId),
       eq(enrollments.status, "ACTIVE")
     ),
