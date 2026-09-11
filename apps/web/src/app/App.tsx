@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Navbar } from "@/widgets/Navbar/Navbar";
 import { EnrollmentCartModal } from "@/widgets/EnrollmentCart/EnrollmentCartModal";
@@ -8,6 +8,8 @@ import { GradePage } from "@/views/GradePage";
 import { AdminPage } from "@/views/AdminPage";
 import { motion, AnimatePresence } from "motion/react";
 import { pageFadeVariants } from "@/shared/lib/motion";
+import { getDefaultTabForRole, isTabVisibleForRole, type TabType } from "@/shared/lib/tabs";
+import { useUserStore } from "@/shared/stores/useUserStore";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,8 +19,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-type TabType = "timetable" | "courses" | "grades" | "admin";
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -58,7 +58,14 @@ class ErrorBoundary extends React.Component<
 }
 
 export function App() {
-  const [currentTab, setCurrentTab] = useState<TabType>("timetable");
+  const { currentUser } = useUserStore();
+  const [currentTab, setCurrentTab] = useState<TabType>(() => getDefaultTabForRole(currentUser.role));
+
+  useEffect(() => {
+    if (!isTabVisibleForRole(currentTab, currentUser.role)) {
+      setCurrentTab(getDefaultTabForRole(currentUser.role));
+    }
+  }, [currentUser.id, currentUser.role, currentTab]);
 
   return (
     <QueryClientProvider client={queryClient}>

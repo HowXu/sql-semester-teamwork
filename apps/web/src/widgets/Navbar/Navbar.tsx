@@ -1,5 +1,7 @@
 import { useUserStore, PRESET_USERS } from "@/shared/stores/useUserStore";
 import { useCourseDraftStore } from "@/shared/stores/useCourseDraftStore";
+import { ROLE_VISIBLE_TABS } from "@/shared/lib/tabs";
+import type { TabType } from "@/shared/lib/tabs";
 import {
   GraduationCap,
   Calendar,
@@ -14,8 +16,8 @@ import { Badge } from "@/shared/ui";
 import { useState } from "react";
 
 export interface NavbarProps {
-  currentTab: "timetable" | "courses" | "grades" | "admin";
-  onTabChange: (tab: "timetable" | "courses" | "grades" | "admin") => void;
+  currentTab: TabType;
+  onTabChange: (tab: TabType) => void;
 }
 
 export function Navbar({ currentTab, onTabChange }: NavbarProps) {
@@ -41,79 +43,55 @@ export function Navbar({ currentTab, onTabChange }: NavbarProps) {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs - role-aware */}
         <nav className="flex items-center gap-1.5 sm:gap-2">
-          <button
-            type="button"
-            onClick={() => onTabChange("timetable")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all ${
-              currentTab === "timetable"
-                ? "bg-primary text-primary-foreground shadow-xs"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <Calendar className="h-5 w-5" />
-            <span>我的课表</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onTabChange("courses")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all ${
-              currentTab === "courses"
-                ? "bg-primary text-primary-foreground shadow-xs"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <BookOpen className="h-5 w-5" />
-            <span>选课大厅</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onTabChange("grades")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all ${
-              currentTab === "grades"
-                ? "bg-primary text-primary-foreground shadow-xs"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <Award className="h-5 w-5" />
-            <span>成绩与GPA</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onTabChange("admin")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all ${
-              currentTab === "admin"
-                ? "bg-primary text-primary-foreground shadow-xs"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <BarChart3 className="h-5 w-5" />
-            <span>教学大盘</span>
-          </button>
+          {ROLE_VISIBLE_TABS[currentUser.role].map((tab) => {
+            const isActive = tab === currentTab;
+            const config: Record<TabType, { Icon: typeof Calendar; label: string }> = {
+              timetable: { Icon: Calendar, label: "我的课表" },
+              courses: { Icon: BookOpen, label: "选课大厅" },
+              grades: { Icon: Award, label: "成绩与GPA" },
+              admin: { Icon: BarChart3, label: "教学大盘" },
+            };
+            const { Icon, label } = config[tab];
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => onTabChange(tab)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{label}</span>
+              </button>
+            );
+          })}
         </nav>
 
         {/* Right Actions: Draft Cart & User Switcher */}
         <div className="flex items-center gap-2.5 sm:gap-3.5">
-          {/* Pre-selection Cart button (Task 6 会按角色隐藏) */}
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="relative flex items-center gap-2 rounded-xl border border-border/80 bg-card px-4 py-2.5 text-sm sm:text-base font-semibold text-foreground hover:bg-muted transition-colors shadow-2xs"
-            title="查看预选车"
-            aria-label="查看预选车"
-          >
-            <ShoppingCart className="h-5 w-5 text-primary" />
-            <span className="hidden sm:inline">预选清单</span>
-            {drafts.length > 0 && (
-              <Badge variant="success" className="px-2 py-0 text-sm font-bold">
-                {drafts.length}
-              </Badge>
-            )}
-          </button>
+          {/* Pre-selection Cart button - 仅学生可见 */}
+          {currentUser.role === "student" && (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="relative flex items-center gap-2 rounded-xl border border-border/80 bg-card px-4 py-2.5 text-sm sm:text-base font-semibold text-foreground hover:bg-muted transition-colors shadow-2xs"
+              title="查看预选车"
+              aria-label="查看预选车"
+            >
+              <ShoppingCart className="h-5 w-5 text-primary" />
+              <span className="hidden sm:inline">预选清单</span>
+              {drafts.length > 0 && (
+                <Badge variant="success" className="px-2 py-0 text-sm font-bold">
+                  {drafts.length}
+                </Badge>
+              )}
+            </button>
+          )}
 
           {/* User Switcher Dropdown */}
           <div className="relative">
