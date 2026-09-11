@@ -1,5 +1,4 @@
-﻿import { db, students, users } from "@repo/db";
-import { eq } from "drizzle-orm";
+﻿import { eq } from "drizzle-orm";
 
 const LEGACY_ID_MAP: Record<string, string> = {
   "user-s1": "usr_stu_1",
@@ -15,24 +14,31 @@ const LEGACY_ID_MAP: Record<string, string> = {
   "2024002": "usr_stu_2",
 };
 
-export async function resolveStudentId(idOrNo?: string | null): Promise<string> {
+export interface ResolveStudentDeps {
+  db: import("@repo/db").AppDatabase;
+}
+
+export async function resolveStudentId(
+  idOrNo: string | null | undefined,
+  deps: ResolveStudentDeps
+): Promise<string> {
   if (!idOrNo) return "usr_stu_1";
   if (LEGACY_ID_MAP[idOrNo]) return LEGACY_ID_MAP[idOrNo];
   if (idOrNo.startsWith("usr_")) return idOrNo;
 
-  // 1. 按学号查找 (例如 "20240101")
+  const { students, users } = await import("@repo/db/schema");
+  const db = deps.db;
+
   const st = await db.query.students.findFirst({
     where: eq(students.studentNo, idOrNo)
   });
   if (st) return st.id;
 
-  // 2. 按学生表主键查找
   const stById = await db.query.students.findFirst({
     where: eq(students.id, idOrNo)
   });
   if (stById) return stById.id;
 
-  // 3. 按用户名查找 (例如 "student01")
   const u = await db.query.users.findFirst({
     where: eq(users.username, idOrNo)
   });

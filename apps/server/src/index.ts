@@ -1,12 +1,13 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
-import { authRouter } from "./auth.js";
-import { coursesRouter } from "./courses.js";
-import { offeringsRouter } from "./offerings.js";
-import { enrollmentsRouter } from "./enrollments.js";
-import { gradesRouter } from "./grades.js";
-import { statsRouter } from "./stats.js";
+import { db, sqlite } from "@repo/db";
+import { createAuthRouter } from "./auth.js";
+import { createCoursesRouter } from "./courses.js";
+import { createOfferingsRouter } from "./offerings.js";
+import { createEnrollmentsRouter } from "./enrollments.js";
+import { createGradesRouter } from "./grades.js";
+import { createStatsRouter } from "./stats.js";
 import { log } from "./logger.js";
 
 const app = new Hono();
@@ -67,12 +68,12 @@ app.get("/", (c) => {
   });
 });
 
-app.route("/api/auth", authRouter);
-app.route("/api/courses", coursesRouter);
-app.route("/api/offerings", offeringsRouter);
-app.route("/api/enrollments", enrollmentsRouter);
-app.route("/api/grades", gradesRouter);
-app.route("/api/stats", statsRouter);
+app.route("/api/auth", createAuthRouter({ db }));
+app.route("/api/courses", createCoursesRouter({ db }));
+app.route("/api/offerings", createOfferingsRouter({ db }));
+app.route("/api/enrollments", createEnrollmentsRouter({ db, sqlite }));
+app.route("/api/grades", createGradesRouter({ db }));
+app.route("/api/stats", createStatsRouter({ db }));
 
 const port = 3000;
 
