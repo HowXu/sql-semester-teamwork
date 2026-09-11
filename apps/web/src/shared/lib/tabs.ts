@@ -6,7 +6,7 @@ type Role = AppUser["role"];
 
 export const ROLE_VISIBLE_TABS: Readonly<Record<Role, ReadonlyArray<TabType>>> = {
   student: ["timetable", "courses", "grades"],
-  teacher: ["timetable", "admin"],
+  teacher: ["admin"],
   admin: ["courses", "admin"],
 };
 
