@@ -1,5 +1,14 @@
 type Level = "INFO" | "PASS" | "WARN" | "FAIL" | "GUIDE";
 
+function sanitize(value: string): string {
+  return Array.from(value, (char) => {
+    const code = char.charCodeAt(0);
+    return code <= 0x1f || (code >= 0x7f && code <= 0x9f)
+      ? `\\x${code.toString(16).padStart(2, "0")}`
+      : char;
+  }).join("");
+}
+
 const TAG: Record<Level, string> = {
   INFO: "[INFO]",
   PASS: "[PASS]",
@@ -11,22 +20,22 @@ const TAG: Record<Level, string> = {
 function stringify(v: unknown): string {
   if (v === null) return "null";
   if (v === undefined) return "undefined";
-  if (typeof v === "string") return v;
+  if (typeof v === "string") return sanitize(v);
   if (typeof v === "number" || typeof v === "boolean") return String(v);
-  if (v instanceof Error) return `${v.name}: ${v.message}`;
+  if (v instanceof Error) return sanitize(`${v.name}: ${v.message}`);
   try {
     return JSON.stringify(v);
   } catch {
-    return String(v);
+    return sanitize(String(v));
   }
 }
 
 function format(level: Level, msg: string, ctx?: Record<string, unknown>): string {
   const ts = new Date().toISOString();
-  let line = `${ts} ${TAG[level]} ${msg}`;
+  let line = `${ts} ${TAG[level]} ${sanitize(msg)}`;
   if (ctx && Object.keys(ctx).length > 0) {
     const kv = Object.entries(ctx)
-      .map(([k, v]) => `${k}=${stringify(v)}`)
+       .map(([k, v]) => `${sanitize(k)}=${stringify(v)}`)
       .join(" ");
     line += ` | ${kv}`;
   }
