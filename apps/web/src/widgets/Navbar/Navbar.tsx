@@ -27,14 +27,14 @@ export function Navbar({ currentTab, onTabChange }: NavbarProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-md">
-      <div className="flex h-20 w-full items-center justify-between gap-4 px-6 sm:px-10">
+      <div className="flex min-h-20 w-full flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-10 lg:h-20 lg:flex-nowrap lg:py-0">
         {/* Brand */}
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
             <GraduationCap className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+            <h1 className="truncate text-lg font-bold tracking-tight text-foreground sm:text-xl">
               综合教务选课系统
             </h1>
             <p className="text-sm text-muted-foreground font-medium">
@@ -44,7 +44,7 @@ export function Navbar({ currentTab, onTabChange }: NavbarProps) {
         </div>
 
         {/* Navigation Tabs - role-aware */}
-        <nav className="flex items-center gap-1.5 sm:gap-2">
+        <nav className="order-3 -mx-4 flex basis-full items-center gap-1.5 overflow-x-auto px-4 pb-1 sm:-mx-10 sm:px-10 sm:gap-2 lg:order-none lg:mx-0 lg:basis-auto lg:overflow-visible lg:px-0 lg:pb-0">
           {ROLE_VISIBLE_TABS[currentUser.role].map((tab) => {
             const isActive = tab === currentTab;
             const config: Record<TabType, { Icon: typeof Calendar; label: string }> = {
@@ -59,7 +59,7 @@ export function Navbar({ currentTab, onTabChange }: NavbarProps) {
                 key={tab}
                 type="button"
                 onClick={() => onTabChange(tab)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all ${
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all sm:px-4 sm:text-base ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -73,13 +73,13 @@ export function Navbar({ currentTab, onTabChange }: NavbarProps) {
         </nav>
 
         {/* Right Actions: Draft Cart & User Switcher */}
-        <div className="flex items-center gap-2.5 sm:gap-3.5">
+        <div className="flex shrink-0 items-center gap-2.5 sm:gap-3.5">
           {/* Pre-selection Cart button - 仅学生可见 */}
           {currentUser.role === "student" && (
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="relative flex items-center gap-2 rounded-xl border border-border/80 bg-card px-4 py-2.5 text-sm sm:text-base font-semibold text-foreground hover:bg-muted transition-colors shadow-2xs"
+              className="relative flex items-center gap-2 rounded-xl border border-border/80 bg-card px-2.5 py-2.5 text-sm font-semibold text-foreground shadow-2xs transition-colors hover:bg-muted sm:px-4 sm:text-base"
               title="查看预选车"
               aria-label="查看预选车"
             >
@@ -98,7 +98,7 @@ export function Navbar({ currentTab, onTabChange }: NavbarProps) {
             <button
               type="button"
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center gap-2.5 rounded-xl border border-border/80 bg-card px-4 py-2.5 text-sm sm:text-base font-semibold text-foreground shadow-2xs hover:bg-muted transition-colors"
+              className="flex items-center gap-2.5 rounded-xl border border-border/80 bg-card px-2.5 py-2.5 text-sm font-semibold text-foreground shadow-2xs transition-colors hover:bg-muted sm:px-4 sm:text-base"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary font-bold">
                 <User className="h-5 w-5" />
