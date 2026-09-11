@@ -305,28 +305,26 @@ export const api = {
   },
 
   enroll: async (studentId: string, offeringId: string) => {
-    try {
-      return await request<{ success: true; enrollmentId: string; message: string }>(
-        "/api/enrollments/enroll",
-        {
-          method: "POST",
-          body: JSON.stringify({ studentId, offeringId }),
-        }
-      );
-    } catch {
-      return offlineDataEngine.enroll(studentId, offeringId);
-    }
+    return await request<{
+      success: true;
+      enrollmentId: string;
+      message: string;
+      courseName: string;
+      credits: number;
+    }>("/api/enrollments/enroll", {
+      method: "POST",
+      body: JSON.stringify({ studentId, offeringId }),
+    });
   },
 
   drop: async (studentId: string, offeringId: string) => {
-    try {
-      return await request<{ success: true; message: string }>("/api/enrollments/drop", {
+    return await request<{ success: true; message: string }>(
+      "/api/enrollments/drop",
+      {
         method: "POST",
         body: JSON.stringify({ studentId, offeringId }),
-      });
-    } catch {
-      return offlineDataEngine.drop(studentId, offeringId);
-    }
+      }
+    );
   },
 
   getMyGrades: async (studentId: string, semester?: string) => {
