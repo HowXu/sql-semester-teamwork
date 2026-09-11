@@ -4,7 +4,17 @@ import { users, students, teachers, courses, courseOfferings, timeSlots, enrollm
 async function runSeed() {
   console.log("[INFO] 正在初始化 SQLite 数据表与种子数据...");
 
-  // 1. 创建表结构 (若未自动执行 migration)
+  // 1. 清理并重建表结构
+  await sqlite.execute("DROP TABLE IF EXISTS audit_logs;");
+  await sqlite.execute("DROP TABLE IF EXISTS grades;");
+  await sqlite.execute("DROP TABLE IF EXISTS enrollments;");
+  await sqlite.execute("DROP TABLE IF EXISTS time_slots;");
+  await sqlite.execute("DROP TABLE IF EXISTS course_offerings;");
+  await sqlite.execute("DROP TABLE IF EXISTS courses;");
+  await sqlite.execute("DROP TABLE IF EXISTS teachers;");
+  await sqlite.execute("DROP TABLE IF EXISTS students;");
+  await sqlite.execute("DROP TABLE IF EXISTS users;");
+
   await sqlite.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
@@ -102,17 +112,6 @@ async function runSeed() {
       timestamp INTEGER NOT NULL
     );
   `);
-
-  // 2. 清空现有数据
-  await sqlite.execute("DELETE FROM audit_logs;");
-  await sqlite.execute("DELETE FROM grades;");
-  await sqlite.execute("DELETE FROM enrollments;");
-  await sqlite.execute("DELETE FROM time_slots;");
-  await sqlite.execute("DELETE FROM course_offerings;");
-  await sqlite.execute("DELETE FROM courses;");
-  await sqlite.execute("DELETE FROM teachers;");
-  await sqlite.execute("DELETE FROM students;");
-  await sqlite.execute("DELETE FROM users;");
 
   const now = Date.now();
 
