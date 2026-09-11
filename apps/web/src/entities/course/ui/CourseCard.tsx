@@ -3,6 +3,7 @@ import { type ApiOffering } from "@/shared/api/client";
 import { CapacityBar, Button, Badge } from "@/shared/ui";
 import { Clock, MapPin, User, Check, Plus, AlertTriangle, ShoppingCart } from "@/shared/icons";
 import { cardInteractiveProps } from "@/shared/lib/motion";
+import { useUserStore } from "@/shared/stores/useUserStore";
 
 export interface CourseCardProps {
   offering: ApiOffering;
@@ -29,6 +30,7 @@ export function CourseCard({
   onToggleDraft,
   isLoading = false,
 }: CourseCardProps) {
+  const isStudent = useUserStore((state) => state.currentUser.role === "student");
   const isFull = offering.currentCapacity >= offering.maxCapacity;
   const dayName = WEEKDAY_NAMES[offering.dayOfWeek] || `周${offering.dayOfWeek}`;
   const periodText = `${dayName} 第${offering.startPeriod}-${offering.endPeriod}节`;
@@ -96,42 +98,44 @@ export function CourseCard({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-2 pt-2">
-        <Button
-          variant={isDrafted ? "secondary" : "ghost"}
-          size="sm"
-          onClick={() => onToggleDraft(offering)}
-          disabled={isEnrolled || isLoading}
-          title={isDrafted ? "已在预选车" : "加入预选清单"}
-          className="text-xs font-medium"
-        >
-          <ShoppingCart className="h-3.5 w-3.5" />
-          <span>{isDrafted ? "已暂存" : "预选车"}</span>
-        </Button>
+      {isStudent && (
+        <div className="mt-4 flex items-center justify-between gap-2 pt-2">
+          <Button
+            variant={isDrafted ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => onToggleDraft(offering)}
+            disabled={isEnrolled || isLoading}
+            title={isDrafted ? "已在预选车" : "加入预选清单"}
+            className="text-xs font-medium"
+          >
+            <ShoppingCart className="h-3.5 w-3.5" />
+            <span>{isDrafted ? "已暂存" : "预选车"}</span>
+          </Button>
 
-        {isEnrolled ? (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onDrop(offering)}
-            disabled={isLoading}
-            className="text-xs font-medium"
-          >
-            <span>{isLoading ? "处理中..." : "申请退选"}</span>
-          </Button>
-        ) : (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => onEnroll(offering)}
-            disabled={isLoading || isFull || hasTimeConflict}
-            className="text-xs font-medium"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>{isLoading ? "选课中..." : "立即选课"}</span>
-          </Button>
-        )}
-      </div>
+          {isEnrolled ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDrop(offering)}
+              disabled={isLoading}
+              className="text-xs font-medium"
+            >
+              <span>{isLoading ? "处理中..." : "申请退选"}</span>
+            </Button>
+          ) : (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => onEnroll(offering)}
+              disabled={isLoading || isFull || hasTimeConflict}
+              className="text-xs font-medium"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>{isLoading ? "选课中..." : "立即选课"}</span>
+            </Button>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }

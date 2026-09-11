@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useCourseDraftStore, type DraftOffering } from "@/shared/stores/useCourseDraftStore";
 import { useUserStore } from "@/shared/stores/useUserStore";
@@ -24,11 +24,26 @@ export function EnrollmentCartModal() {
 
   const totalCredits = drafts.reduce((acc, cur) => acc + cur.credit, 0);
 
+  useEffect(() => {
+    if (currentUser.role !== "student" && isOpen) {
+      setOpen(false);
+    }
+  }, [currentUser.role, isOpen, setOpen]);
+
   const handleBatchEnroll = async () => {
+    if (useUserStore.getState().currentUser.role !== "student") {
+      setOpen(false);
+      return;
+    }
+
     setIsSubmitting(true);
     const outcomes: { courseName: string; success: boolean; message: string }[] = [];
 
     for (const draft of drafts) {
+      if (useUserStore.getState().currentUser.role !== "student") {
+        setOpen(false);
+        break;
+      }
       try {
         const res = await api.enroll(studentId, draft.id);
         outcomes.push({
@@ -55,6 +70,8 @@ export function EnrollmentCartModal() {
     void queryClient.invalidateQueries({ queryKey: ["my-grades", studentId] });
     void queryClient.invalidateQueries({ queryKey: ["stats-overview"] });
   };
+
+  if (currentUser.role !== "student") return null;
 
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={setOpen}>
