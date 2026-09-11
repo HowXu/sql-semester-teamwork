@@ -4,6 +4,7 @@ import { ScheduleBlock } from "@/entities/schedule/ui/ScheduleBlock";
 import { ConfirmModal, Button, Badge } from "@/shared/ui";
 import { timetableContainerVariants } from "@/shared/lib/motion";
 import { Calendar, Clock, BookOpen, RefreshCw } from "@/shared/icons";
+import { useUserStore } from "@/shared/stores/useUserStore";
 import { useState } from "react";
 
 export interface TimetableGridProps {
@@ -51,6 +52,9 @@ export function TimetableGrid({
   isRefreshing = false,
 }: TimetableGridProps) {
   const [courseToDrop, setCourseToDrop] = useState<ApiScheduleItem | null>(null);
+  const { currentUser } = useUserStore();
+  const isTeacher = currentUser.role === "teacher";
+  const showTeacherEmpty = isTeacher && scheduleItems.length === 0;
 
   return (
     <div className="space-y-4">
@@ -96,86 +100,96 @@ export function TimetableGrid({
       </div>
 
       {/* Main Timetable Grid Canvas */}
-      <div className="overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-xs no-scrollbar">
-        <div className="min-w-[820px]">
-          {/* Header Row: Days of Week */}
-          <div className="grid grid-cols-[110px_repeat(7,1fr)] border-b border-border/80 bg-muted/40 text-center text-xs font-semibold text-muted-foreground">
-            <div className="py-3 border-r border-border/60 flex items-center justify-center gap-1.5 text-foreground font-bold">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-              <span>节次 / 时段</span>
-            </div>
-            {DAYS.map((d) => (
-              <div key={d.id} className="py-3 border-r border-border/60 last:border-r-0 font-bold text-foreground text-sm">
-                {d.name}
+      {showTeacherEmpty ? (
+        <div className="rounded-2xl border border-border/80 bg-card p-10 shadow-xs text-center space-y-3">
+          <Calendar className="mx-auto h-10 w-10 text-muted-foreground" />
+          <h3 className="text-base sm:text-lg font-bold text-foreground">教师暂无选修课表</h3>
+          <p className="text-sm text-muted-foreground font-medium max-w-md mx-auto">
+            当前以教师身份登录，本视图用于展示个人选修课程；教师授课课表功能将在后续迭代中开放。
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-xs no-scrollbar">
+          <div className="min-w-[820px]">
+            {/* Header Row: Days of Week */}
+            <div className="grid grid-cols-[110px_repeat(7,1fr)] border-b border-border/80 bg-muted/40 text-center text-xs font-semibold text-muted-foreground">
+              <div className="py-3 border-r border-border/60 flex items-center justify-center gap-1.5 text-foreground font-bold">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>节次 / 时段</span>
               </div>
-            ))}
-          </div>
-
-          {/* Grid Body */}
-          <div className="relative grid grid-cols-[110px_repeat(7,1fr)]">
-            {/* Background Grid Cells & Period Timeline */}
-            {PERIODS.map((period) => {
-              const isSectionEnd = period.id === 4 || period.id === 8;
-              return (
-                <div key={period.id} className="contents">
-                  {/* Period sidebar */}
-                  <div
-                    className={`flex flex-col items-center justify-center border-r border-border/60 bg-card px-2 py-2 text-center transition-colors h-[68px] ${
-                      isSectionEnd ? "border-b-2 border-b-border" : "border-b border-border/40"
-                    }`}
-                  >
-                    <span className="text-xs font-bold text-foreground tracking-wide">第 {period.id} 节</span>
-                    <span className="font-mono text-[11px] text-muted-foreground font-medium mt-0.5 tracking-tight">
-                      {period.time}
-                    </span>
-                  </div>
-
-                  {/* 7 Day cells */}
-                  {DAYS.map((day) => (
-                    <div
-                      key={`${day.id}-${period.id}`}
-                      className={`h-[68px] border-r border-border/40 last:border-r-0 hover:bg-muted/10 transition-colors ${
-                        isSectionEnd ? "border-b-2 border-b-border" : "border-b border-border/30"
-                      }`}
-                    />
-                  ))}
+              {DAYS.map((d) => (
+                <div key={d.id} className="py-3 border-r border-border/60 last:border-r-0 font-bold text-foreground text-sm">
+                  {d.name}
                 </div>
-              );
-            })}
+              ))}
+            </div>
 
-            {/* Floating Course Blocks Layer */}
-            <motion.div
-              variants={timetableContainerVariants}
-              initial="hidden"
-              animate="visible"
-              className="absolute inset-0 grid grid-cols-[110px_repeat(7,1fr)] grid-rows-[repeat(12,68px)] pointer-events-none p-0.5"
-            >
-              {scheduleItems.map((item) => {
-                const dayCol = item.dayOfWeek + 1; // Col 1 is period time column, day 1 is col 2
-                const rowStart = item.startPeriod;
-                const rowSpan = item.endPeriod - item.startPeriod + 1;
-
+            {/* Grid Body */}
+            <div className="relative grid grid-cols-[110px_repeat(7,1fr)]">
+              {/* Background Grid Cells & Period Timeline */}
+              {PERIODS.map((period) => {
+                const isSectionEnd = period.id === 4 || period.id === 8;
                 return (
-                  <div
-                    key={item.enrollmentId}
-                    style={{
-                      gridColumnStart: dayCol,
-                      gridRowStart: rowStart,
-                      gridRowEnd: `span ${rowSpan}`,
-                    }}
-                    className="pointer-events-auto p-1"
-                  >
-                    <ScheduleBlock
-                      item={item}
-                      onDropCourse={(c) => setCourseToDrop(c)}
-                    />
+                  <div key={period.id} className="contents">
+                    {/* Period sidebar */}
+                    <div
+                      className={`flex flex-col items-center justify-center border-r border-border/60 bg-card px-2 py-2 text-center transition-colors h-[68px] ${
+                        isSectionEnd ? "border-b-2 border-b-border" : "border-b border-border/40"
+                      }`}
+                    >
+                      <span className="text-xs font-bold text-foreground tracking-wide">第 {period.id} 节</span>
+                      <span className="font-mono text-[11px] text-muted-foreground font-medium mt-0.5 tracking-tight">
+                        {period.time}
+                      </span>
+                    </div>
+
+                    {/* 7 Day cells */}
+                    {DAYS.map((day) => (
+                      <div
+                        key={`${day.id}-${period.id}`}
+                        className={`h-[68px] border-r border-border/40 last:border-r-0 hover:bg-muted/10 transition-colors ${
+                          isSectionEnd ? "border-b-2 border-b-border" : "border-b border-border/30"
+                        }`}
+                      />
+                    ))}
                   </div>
                 );
               })}
-            </motion.div>
+
+              {/* Floating Course Blocks Layer */}
+              <motion.div
+                variants={timetableContainerVariants}
+                initial="hidden"
+                animate="visible"
+                className="absolute inset-0 grid grid-cols-[110px_repeat(7,1fr)] grid-rows-[repeat(12,68px)] pointer-events-none p-0.5"
+              >
+                {scheduleItems.map((item) => {
+                  const dayCol = item.dayOfWeek + 1; // Col 1 is period time column, day 1 is col 2
+                  const rowStart = item.startPeriod;
+                  const rowSpan = item.endPeriod - item.startPeriod + 1;
+
+                  return (
+                    <div
+                      key={item.enrollmentId}
+                      style={{
+                        gridColumnStart: dayCol,
+                        gridRowStart: rowStart,
+                        gridRowEnd: `span ${rowSpan}`,
+                      }}
+                      className="pointer-events-auto p-1"
+                    >
+                      <ScheduleBlock
+                        item={item}
+                        onDropCourse={(c) => setCourseToDrop(c)}
+                      />
+                    </div>
+                  );
+                })}
+              </motion.div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Drop Course Confirmation Modal */}
       <ConfirmModal
