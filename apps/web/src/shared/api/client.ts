@@ -96,10 +96,10 @@ const getApiBase = () => {
   if (typeof window !== "undefined") {
     // If in Vite dev server, use empty string so Vite proxy forwards to :3000
     if (window.location.port === "5173") return "";
-    // If in Tauri or standalone build, target localhost:3000
-    return "http://127.0.0.1:3000";
+    // If in Tauri or standalone build, target localhost:3001
+    return "http://127.0.0.1:3001";
   }
-  return "http://127.0.0.1:3000";
+  return "http://127.0.0.1:3001";
 };
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {

@@ -75,7 +75,7 @@ app.route("/api/enrollments", createEnrollmentsRouter({ db, sqlite }));
 app.route("/api/grades", createGradesRouter({ db }));
 app.route("/api/stats", createStatsRouter({ db }));
 
-const port = 3000;
+const port = 3001;
 
 log.guide("===== Academic Affairs Course Selection API =====");
 log.guide("启动", { port, version: "1.0.0" });

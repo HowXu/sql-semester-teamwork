@@ -6,7 +6,7 @@ import { useCourseCatalogViewModel } from "./model/useCourseCatalogViewModel";
 import { createTestQueryClient } from "@/test-helpers/testQueryClient";
 import type { ApiOffering } from "@/shared/api/client";
 
-const SERVER_BASE = "http://localhost:3000";
+const SERVER_BASE = "http://localhost:3001";
 const SKIP = process.env["SKIP_INTEGRATION"] === "1";
 const describeIf = SKIP ? describe.skip : describe;
 
@@ -127,8 +127,8 @@ describeIf("useCourseCatalogViewModel integration with dev:server", () => {
   });
 
   it("real drop: UI cache and server DB converge to the same -1", async () => {
-    // 用 usr_stu_3 而非 usr_stu_2:测试 1 已将 usr_stu_2 选入 off_web_01;同学生 drop+enroll
-    // 会撞 server 的 UNIQUE(student_id, offering_id) 约束(DROPPED 行阻止新 INSERT,500)。
+    // 用 usr_stu_3 而非 usr_stu_2:测试 1 已将 usr_stu_2 选入 off_web_01。
+    // server 用 partial unique index WHERE status='ACTIVE',同学生 drop 后再选同一门课允许通过。
     userRef.current = {
       id: "usr_stu_3",
       name: "赵文杰",
