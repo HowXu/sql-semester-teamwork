@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer, real, uniqueIndex } from "drizzle-orm/sqlite-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -64,7 +64,9 @@ export const enrollments = sqliteTable(
     enrolledAt: integer("enrolled_at").notNull()
   },
   (table) => [
-    uniqueIndex("uniq_student_offering").on(table.studentId, table.offeringId)
+    uniqueIndex("uniq_active_enrollment")
+      .on(table.studentId, table.offeringId)
+      .where(sql`status = 'ACTIVE'`)
   ]
 );
 

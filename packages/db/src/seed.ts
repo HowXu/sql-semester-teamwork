@@ -76,10 +76,13 @@ async function runSeed() {
       student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
       offering_id TEXT NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
       status TEXT NOT NULL DEFAULT 'ACTIVE',
-      enrolled_at INTEGER NOT NULL,
-      UNIQUE(student_id, offering_id)
+      enrolled_at INTEGER NOT NULL
     );
   `);
+  await sqlite.execute(
+    `CREATE UNIQUE INDEX IF NOT EXISTS uniq_active_enrollment
+     ON enrollments(student_id, offering_id) WHERE status = 'ACTIVE';`
+  );
 
   await sqlite.execute(`
     CREATE TABLE IF NOT EXISTS grades (
@@ -200,6 +203,14 @@ async function runSeed() {
   await db.insert(grades).values(gradeRows);
 
   console.log("[PASS] SQLite 种子数据填充完毕！共注入 8 门专业核心课、8 个班次及初始选课与成绩记录。");
+
+  await sqlite.execute(`
+    UPDATE course_offerings
+    SET current_capacity = COALESCE((
+      SELECT COUNT(*) FROM enrollments e
+      WHERE e.offering_id = course_offerings.id AND e.status = 'ACTIVE'
+    ), 0);
+  `);
 }
 
 runSeed().catch((err) => {
