@@ -389,12 +389,11 @@ export function GradeEntryDrawer({
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <Button
-                            variant="secondary"
-                            size="sm"
+                          <button
+                            type="button"
                             disabled={isSavingThis || isSubmitting || currentInput.trim() === ""}
                             onClick={() => handleSaveSingle(stu.enrollmentId)}
-                            className="rounded-lg text-xs font-semibold px-3 py-1 gap-1"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-foreground shadow-2xs transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-40 disabled:pointer-events-none active:scale-95"
                           >
                             {isSavingThis ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
@@ -402,7 +401,7 @@ export function GradeEntryDrawer({
                               <Save className="h-3 w-3" />
                             )}
                             <span>{stu.score !== null ? "更新" : "保存"}</span>
-                          </Button>
+                          </button>
                         </td>
                       </tr>
                     );

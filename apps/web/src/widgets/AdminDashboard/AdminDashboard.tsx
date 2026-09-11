@@ -121,14 +121,14 @@ export function AdminDashboard() {
           </div>
 
           {state.isTeacher && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 rounded-xl border border-border/80 bg-background/80 p-1 shadow-2xs">
               <button
                 type="button"
                 onClick={() => actions.setFilterMyCoursesOnly(true)}
-                className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   state.filterMyCoursesOnly
                     ? "bg-primary text-primary-foreground shadow-2xs"
-                    : "text-muted-foreground hover:bg-muted"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                 }`}
               >
                 我主讲的教学班 ({state.myOfferingsCount})
@@ -136,10 +136,10 @@ export function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => actions.setFilterMyCoursesOnly(false)}
-                className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   !state.filterMyCoursesOnly
                     ? "bg-primary text-primary-foreground shadow-2xs"
-                    : "text-muted-foreground hover:bg-muted"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                 }`}
               >
                 全部教学班 ({state.totalOfferingsCount})
@@ -198,15 +198,14 @@ export function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Button
-                        variant="secondary"
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => actions.openGradeEntry(off)}
-                        className="rounded-xl text-xs font-semibold gap-1.5 px-3 py-1.5"
+                        className="group inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-2xs transition-all duration-150 hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-xs active:scale-95"
                       >
-                        <Award className="h-3.5 w-3.5 text-primary" />
+                        <Award className="h-3.5 w-3.5 text-primary group-hover:text-primary-foreground transition-colors" />
                         <span>成绩录入 / 名单</span>
-                      </Button>
+                      </button>
                     </td>
                   </tr>
                 ))
