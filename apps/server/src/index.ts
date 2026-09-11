@@ -75,6 +75,19 @@ app.route("/api/enrollments", createEnrollmentsRouter({ db, sqlite }));
 app.route("/api/grades", createGradesRouter({ db }));
 app.route("/api/stats", createStatsRouter({ db }));
 
+try {
+  await sqlite.execute(`
+    UPDATE course_offerings
+    SET current_capacity = COALESCE((
+      SELECT COUNT(*) FROM enrollments e
+      WHERE e.offering_id = course_offerings.id AND e.status = 'ACTIVE'
+    ), 0);
+  `);
+  log.info("[DB] 教学班实时容量已完成自动校准与同步");
+} catch (e) {
+  log.fail("[DB] 教学班容量初始化校准跳过", { reason: String(e) });
+}
+
 const port = 3001;
 
 log.guide("===== Academic Affairs Course Selection API =====");
