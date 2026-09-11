@@ -63,11 +63,10 @@ export function createEnrollmentsRouter(deps: EnrollmentsDeps): Hono {
     const existing = await db.query.enrollments.findFirst({
       where: and(
         eq(enrollments.studentId, currentUserId),
-        eq(enrollments.offeringId, offeringId),
-        eq(enrollments.status, "ACTIVE")
+        eq(enrollments.offeringId, offeringId)
       )
     });
-    if (existing) {
+    if (existing && existing.status === "ACTIVE") {
       log.fail("[POST /api/enrollments/enroll] 重复选课", {
         userId: currentUserId,
         offeringId,
@@ -143,17 +142,26 @@ export function createEnrollmentsRouter(deps: EnrollmentsDeps): Hono {
       return c.json({ error: "手慢了！该教学班选课名额已满，请选择其他班次。" }, 409);
     }
 
-    const enrollmentId = `enr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const enrollmentId = existing ? existing.id : `enr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const now = Date.now();
 
     try {
-      await db.insert(enrollments).values({
-        id: enrollmentId,
-        studentId: currentUserId,
-        offeringId,
-        status: "ACTIVE",
-        enrolledAt: now
-      });
+      if (existing) {
+        await db.update(enrollments)
+          .set({
+            status: "ACTIVE",
+            enrolledAt: now
+          })
+          .where(eq(enrollments.id, existing.id));
+      } else {
+        await db.insert(enrollments).values({
+          id: enrollmentId,
+          studentId: currentUserId,
+          offeringId,
+          status: "ACTIVE",
+          enrolledAt: now
+        });
+      }
 
       await db.insert(auditLogs).values({
         action: "ENROLL",
