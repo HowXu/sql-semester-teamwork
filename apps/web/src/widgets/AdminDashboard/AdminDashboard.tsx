@@ -131,7 +131,7 @@ export function AdminDashboard() {
                     : "text-muted-foreground hover:bg-muted"
                 }`}
               >
-                我主讲的教学班
+                我主讲的教学班 ({state.myOfferingsCount})
               </button>
               <button
                 type="button"

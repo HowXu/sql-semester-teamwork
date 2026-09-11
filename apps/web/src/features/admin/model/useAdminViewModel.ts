@@ -52,21 +52,33 @@ export function useAdminViewModel() {
 
   const allOfferings: ApiOffering[] = offeringsQuery.data?.offerings ?? [];
 
+  const cleanCurrentName = currentUser.name.replace(/\s*(教授|副教授|讲师|助教|老师)/g, "").trim();
+
+  const myOfferings = useMemo(() => {
+    return allOfferings.filter((o: ApiOffering) => {
+      const cleanOfferingTeacher = o.teacherName.replace(/\s*(教授|副教授|讲师|助教|老师)/g, "").trim();
+      return (
+        o.teacherId === currentUser.id ||
+        (currentUser.teacherId && o.teacherId === currentUser.teacherId) ||
+        (cleanCurrentName && cleanOfferingTeacher === cleanCurrentName) ||
+        currentUser.name.includes(cleanOfferingTeacher) ||
+        o.teacherName.includes(cleanCurrentName)
+      );
+    });
+  }, [allOfferings, currentUser.id, currentUser.teacherId, currentUser.name, cleanCurrentName]);
+
   const displayOfferings = useMemo(() => {
     if (!filterMyCoursesOnly || !isTeacher) {
       return allOfferings;
     }
-    return allOfferings.filter(
-      (o: ApiOffering) =>
-        (currentUser.teacherId && o.teacherId === currentUser.teacherId) ||
-        o.teacherName.includes(currentUser.name)
-    );
-  }, [allOfferings, filterMyCoursesOnly, isTeacher, currentUser.teacherId, currentUser.name]);
+    return myOfferings;
+  }, [allOfferings, myOfferings, filterMyCoursesOnly, isTeacher]);
 
   return {
     state: {
       stats: statsQuery.data,
       offerings: displayOfferings,
+      myOfferingsCount: myOfferings.length,
       totalOfferingsCount: allOfferings.length,
       isLoading: statsQuery.isLoading || offeringsQuery.isLoading,
       isError: statsQuery.isError || offeringsQuery.isError,
