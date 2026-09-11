@@ -44,6 +44,10 @@ export function GradeEntryDrawer({
   const [sortOrder, setSortOrder] = useState<GradeSortOrder>("default");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const students = roster?.students ?? [];
+  const gradedCount = students.filter((s) => s.score !== null).length;
+  const unassignedCount = students.length - gradedCount;
+
   // Sync inputs from roster when loaded
   useEffect(() => {
     if (roster?.students) {
@@ -55,13 +59,7 @@ export function GradeEntryDrawer({
     }
   }, [roster]);
 
-  if (!offering) return null;
-
-  const students = roster?.students ?? [];
-  const gradedCount = students.filter((s) => s.score !== null).length;
-  const unassignedCount = students.length - gradedCount;
-
-  // Filter and sort students
+  // Filter and sort students (called unconditionally)
   const displayStudents = useMemo(() => {
     let list = [...students];
 
@@ -136,6 +134,8 @@ export function GradeEntryDrawer({
     if (score < 60) return "0.00";
     return Math.min(5.0, Number(((score - 50) / 10).toFixed(2))).toFixed(2);
   };
+
+  if (!offering) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
