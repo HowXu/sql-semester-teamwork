@@ -7,10 +7,14 @@ import { log } from "./logger.js";
 
 export const enrollmentsRouter = new Hono();
 
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 // 1. 原子选课（抢课）接口 - 防并发超卖与时间冲突校验
 enrollmentsRouter.post("/enroll", async (c) => {
   const rawUser = c.req.header("x-user-id");
-  let body: { [key: string]: string | undefined };
+  let body: unknown;
   try {
     body = await c.req.json();
   } catch (err) {
@@ -20,11 +24,15 @@ enrollmentsRouter.post("/enroll", async (c) => {
     });
     throw err;
   }
-  const currentUserId = await resolveStudentId(body.studentId || rawUser);
+  const bodyObject = isJsonObject(body) ? body : undefined;
+  const requestedStudentId = typeof bodyObject?.studentId === "string"
+    ? bodyObject.studentId
+    : undefined;
+  const currentUserId = await resolveStudentId(requestedStudentId || rawUser);
 
   log.info("[POST /api/enrollments/enroll] 抢课开始", {
     userId: currentUserId,
-    offeringId: body.offeringId,
+    offeringId: bodyObject?.offeringId,
   });
 
   const parsed = EnrollInputSchema.safeParse(body);
@@ -176,7 +184,7 @@ enrollmentsRouter.post("/enroll", async (c) => {
 // 2. 退课接口 - 恢复剩余名额
 enrollmentsRouter.post("/drop", async (c) => {
   const rawUser = c.req.header("x-user-id");
-  let body: { [key: string]: string | undefined };
+  let body: unknown;
   try {
     body = await c.req.json();
   } catch (err) {
@@ -186,10 +194,18 @@ enrollmentsRouter.post("/drop", async (c) => {
     });
     throw err;
   }
-  const currentUserId = await resolveStudentId(body.studentId || rawUser);
+  const bodyObject = isJsonObject(body) ? body : undefined;
+  const requestedStudentId = typeof bodyObject?.studentId === "string"
+    ? bodyObject.studentId
+    : undefined;
+  const currentUserId = await resolveStudentId(requestedStudentId || rawUser);
 
-  const enrollmentId = body.enrollmentId;
-  const offeringId = body.offeringId;
+  const enrollmentId = typeof bodyObject?.enrollmentId === "string"
+    ? bodyObject.enrollmentId
+    : undefined;
+  const offeringId = typeof bodyObject?.offeringId === "string"
+    ? bodyObject.offeringId
+    : undefined;
 
   log.info("[POST /api/enrollments/drop] 退课开始", {
     userId: currentUserId,
