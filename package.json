@@ -16,6 +16,7 @@
     "db:studio": "pnpm --filter @repo/db studio",
     "db:seed": "pnpm --filter @repo/db seed",
     "tauri": "pnpm --filter @repo/desktop tauri",
+    "test:server": "pnpm --filter @repo/server test",
     "prepare": "lefthook install"
   },
   "devDependencies": {
