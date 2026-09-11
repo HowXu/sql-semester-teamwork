@@ -8,7 +8,7 @@ import type {
   ApiStatsResponse,
 } from "./client";
 
-const STORAGE_KEY = "academic_system_offline_db_v2";
+const STORAGE_KEY = "academic_system_offline_db_v3";
 
 interface StoredData {
   courses: ApiCourse[];
@@ -109,7 +109,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 1,
     endPeriod: 2,
     maxCapacity: 45,
-    currentCapacity: 42,
+    currentCapacity: 2,
     courseName: "数据库系统设计与实现",
     courseCode: "CS201",
     department: "计算机科学与技术学院",
@@ -126,7 +126,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 3,
     endPeriod: 4,
     maxCapacity: 50,
-    currentCapacity: 49,
+    currentCapacity: 2,
     courseName: "数据结构与高级算法",
     courseCode: "CS202",
     department: "计算机科学与技术学院",
@@ -143,7 +143,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 5,
     endPeriod: 6,
     maxCapacity: 40,
-    currentCapacity: 35,
+    currentCapacity: 2,
     courseName: "操作系统核心原理",
     courseCode: "CS301",
     department: "计算机科学与技术学院",
@@ -160,7 +160,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 1,
     endPeriod: 2,
     maxCapacity: 60,
-    currentCapacity: 30,
+    currentCapacity: 2,
     courseName: "计算机网络与分布式系统",
     courseCode: "CS302",
     department: "计算机科学与技术学院",
@@ -177,7 +177,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 3,
     endPeriod: 4,
     maxCapacity: 35,
-    currentCapacity: 35,
+    currentCapacity: 2,
     courseName: "敏捷软件工程与DevOps",
     courseCode: "SE201",
     department: "软件工程学院",
@@ -194,7 +194,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 7,
     endPeriod: 8,
     maxCapacity: 40,
-    currentCapacity: 18,
+    currentCapacity: 0,
     courseName: "现代全栈Web开发技术",
     courseCode: "SE202",
     department: "软件工程学院",
@@ -211,7 +211,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 3,
     endPeriod: 4,
     maxCapacity: 50,
-    currentCapacity: 48,
+    currentCapacity: 0,
     courseName: "机器学习与模式识别",
     courseCode: "AI301",
     department: "数据科学与大数据学院",
@@ -228,7 +228,7 @@ const INITIAL_OFFERINGS: ApiOffering[] = [
     startPeriod: 5,
     endPeriod: 6,
     maxCapacity: 30,
-    currentCapacity: 12,
+    currentCapacity: 0,
     courseName: "信息安全与应用密码学",
     courseCode: "SEC201",
     department: "网络空间安全学院",
