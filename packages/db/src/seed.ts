@@ -163,14 +163,14 @@ async function runSeed() {
 
   // 7. 插入开课教学班 (2026-秋季学期)
   const offeringRows = [
-    { id: "off_db_01", courseId: "crs_db", teacherId: "usr_tch_1", semester: "2026-秋季", maxCapacity: 45, currentCapacity: 42, classroom: "信息楼 A-201" },
-    { id: "off_ds_01", courseId: "crs_ds", teacherId: "usr_tch_1", semester: "2026-秋季", maxCapacity: 50, currentCapacity: 49, classroom: "实验楼 B-405" },
-    { id: "off_os_01", courseId: "crs_os", teacherId: "usr_tch_2", semester: "2026-秋季", maxCapacity: 40, currentCapacity: 35, classroom: "教学主楼 301" },
-    { id: "off_net_01", courseId: "crs_net", teacherId: "usr_tch_2", semester: "2026-秋季", maxCapacity: 60, currentCapacity: 30, classroom: "教学主楼 402" },
-    { id: "off_se_01", courseId: "crs_se", teacherId: "usr_tch_3", semester: "2026-秋季", maxCapacity: 35, currentCapacity: 35, classroom: "信息楼 C-108" },
-    { id: "off_web_01", courseId: "crs_web", teacherId: "usr_tch_3", semester: "2026-秋季", maxCapacity: 40, currentCapacity: 18, classroom: "网络机房 203" },
-    { id: "off_ai_01", courseId: "crs_ai", teacherId: "usr_tch_4", semester: "2026-秋季", maxCapacity: 50, currentCapacity: 48, classroom: "高科报告厅 101" },
-    { id: "off_sec_01", courseId: "crs_sec", teacherId: "usr_tch_4", semester: "2026-秋季", maxCapacity: 30, currentCapacity: 12, classroom: "实验楼 A-102" }
+    { id: "off_db_01", courseId: "crs_db", teacherId: "usr_tch_1", semester: "2026-秋季", maxCapacity: 45, currentCapacity: 0, classroom: "信息楼 A-201" },
+    { id: "off_ds_01", courseId: "crs_ds", teacherId: "usr_tch_1", semester: "2026-秋季", maxCapacity: 50, currentCapacity: 0, classroom: "实验楼 B-405" },
+    { id: "off_os_01", courseId: "crs_os", teacherId: "usr_tch_2", semester: "2026-秋季", maxCapacity: 40, currentCapacity: 0, classroom: "教学主楼 301" },
+    { id: "off_net_01", courseId: "crs_net", teacherId: "usr_tch_2", semester: "2026-秋季", maxCapacity: 60, currentCapacity: 0, classroom: "教学主楼 402" },
+    { id: "off_se_01", courseId: "crs_se", teacherId: "usr_tch_3", semester: "2026-秋季", maxCapacity: 35, currentCapacity: 0, classroom: "信息楼 C-108" },
+    { id: "off_web_01", courseId: "crs_web", teacherId: "usr_tch_3", semester: "2026-秋季", maxCapacity: 40, currentCapacity: 0, classroom: "网络机房 203" },
+    { id: "off_ai_01", courseId: "crs_ai", teacherId: "usr_tch_4", semester: "2026-秋季", maxCapacity: 50, currentCapacity: 0, classroom: "高科报告厅 101" },
+    { id: "off_sec_01", courseId: "crs_sec", teacherId: "usr_tch_4", semester: "2026-秋季", maxCapacity: 30, currentCapacity: 0, classroom: "实验楼 A-102" }
   ];
   await db.insert(courseOfferings).values(offeringRows);
 
