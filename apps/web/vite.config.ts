@@ -28,11 +28,26 @@ export default defineConfig({
     outDir: "dist",
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom"],
-          "vendor-tanstack": ["@tanstack/react-router", "@tanstack/react-query"],
-          "vendor-ui": ["lucide-react", "clsx", "tailwind-merge", "class-variance-authority", "zustand"],
-          "vendor-motion": ["motion"],
+        manualChunks(id: string): string | undefined {
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+            return "vendor-react";
+          }
+          if (id.includes("node_modules/@tanstack/react-router/") || id.includes("node_modules/@tanstack/react-query/")) {
+            return "vendor-tanstack";
+          }
+          if (
+            id.includes("node_modules/lucide-react/") ||
+            id.includes("node_modules/clsx/") ||
+            id.includes("node_modules/tailwind-merge/") ||
+            id.includes("node_modules/class-variance-authority/") ||
+            id.includes("node_modules/zustand/")
+          ) {
+            return "vendor-ui";
+          }
+          if (id.includes("node_modules/motion/")) {
+            return "vendor-motion";
+          }
+          return undefined;
         },
       },
     },
