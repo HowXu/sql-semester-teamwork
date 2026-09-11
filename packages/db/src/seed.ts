@@ -116,8 +116,8 @@ async function runSeed() {
 
   const now = Date.now();
 
-  // 3. 插入用户与角色
-  const userRows = [
+  // 3. 插入用户与角色 (演示账号 + 批量模拟学生)
+  const baseUserRows = [
     { id: "usr_admin", username: "admin", passwordHash: "admin123", role: "ADMIN" as const, createdAt: now },
     { id: "usr_tch_1", username: "tch_zhang", passwordHash: "password123", role: "TEACHER" as const, createdAt: now },
     { id: "usr_tch_2", username: "tch_wang", passwordHash: "password123", role: "TEACHER" as const, createdAt: now },
@@ -128,7 +128,36 @@ async function runSeed() {
     { id: "usr_stu_3", username: "student03", passwordHash: "password123", role: "STUDENT" as const, createdAt: now },
     { id: "usr_stu_4", username: "student04", passwordHash: "password123", role: "STUDENT" as const, createdAt: now }
   ];
-  await db.insert(users).values(userRows);
+
+  const mockUserRows = [];
+  const mockStudentRows = [];
+  const surnames = ["张", "李", "王", "赵", "陈", "刘", "杨", "黄", "周", "吴"];
+  const givenNames = ["浩然", "梓轩", "雨桐", "佳琪", "宇轩", "子涵", "欣怡", "俊杰", "博文", "若琳"];
+  const depts = ["计算机科学与技术学院", "软件工程学院", "数据科学与大数据学院", "网络空间安全学院"];
+
+  for (let i = 1; i <= 50; i++) {
+    const id = `usr_mock_${String(i).padStart(3, "0")}`;
+    const studentNo = `2024${String(900 + i).padStart(4, "0")}`;
+    const realName = `${surnames[i % 10]}${givenNames[(i * 3) % 10]}`;
+    const dept = depts[i % 4]!;
+    mockUserRows.push({
+      id,
+      username: `mock_stu_${i}`,
+      passwordHash: "password123",
+      role: "STUDENT" as const,
+      createdAt: now
+    });
+    mockStudentRows.push({
+      id,
+      studentNo,
+      realName,
+      department: dept,
+      className: `${dept.slice(0, 2)}2401班`,
+      enrolledCredits: 0
+    });
+  }
+
+  await db.insert(users).values([...baseUserRows, ...mockUserRows]);
 
   // 4. 插入教师信息
   const teacherRows = [
@@ -139,14 +168,14 @@ async function runSeed() {
   ];
   await db.insert(teachers).values(teacherRows);
 
-  // 5. 插入学生信息
-  const studentRows = [
+  // 5. 插入学生信息 (主演示学生 + 模拟学生)
+  const baseStudentRows = [
     { id: "usr_stu_1", studentNo: "20240101", realName: "李明", department: "计算机科学与技术学院", className: "计科2401班", enrolledCredits: 10.5 },
-    { id: "usr_stu_2", studentNo: "20240102", realName: "苏晓彤", department: "计算机科学与技术学院", className: "计科2401班", enrolledCredits: 7.0 },
-    { id: "usr_stu_3", studentNo: "20240201", realName: "赵文杰", department: "软件工程学院", className: "软工2402班", enrolledCredits: 6.5 },
-    { id: "usr_stu_4", studentNo: "20240301", realName: "韩雪丽", department: "数据科学与大数据学院", className: "数据2401班", enrolledCredits: 4.0 }
+    { id: "usr_stu_2", studentNo: "20240102", realName: "苏晓彤", department: "计算机科学与技术学院", className: "计科2401班", enrolledCredits: 0.0 },
+    { id: "usr_stu_3", studentNo: "20240201", realName: "赵文杰", department: "软件工程学院", className: "软工2402班", enrolledCredits: 0.0 },
+    { id: "usr_stu_4", studentNo: "20240301", realName: "韩雪丽", department: "数据科学与大数据学院", className: "数据2401班", enrolledCredits: 0.0 }
   ];
-  await db.insert(students).values(studentRows);
+  await db.insert(students).values([...baseStudentRows, ...mockStudentRows]);
 
   // 6. 插入精品课程库
   const courseRows = [
@@ -187,23 +216,56 @@ async function runSeed() {
   ];
   await db.insert(timeSlots).values(timeSlotRows);
 
-  // 9. 预置选课记录与成绩 (李明预选三门课)
+  // 9. 预置真实选课记录 (支持演示场景)：
+  // - off_se_01: 35 人预选 (35/35 满额演示)
+  // - off_ds_01: 48 人预选 (48/50 临界抢课与超卖拦截演示，含李明)
+  // - off_web_01: 18 人预选 (18/40 常规加选/退课演示)
+  // - off_db_01: 42 人预选 (42/45 成绩与绩点计算演示，含李明)
+  // - off_net_01: 30 人预选 (30/60 时间冲突演示，含李明)
+  // - off_os_01: 35 人预选 (35/40)
+  // - off_ai_01: 46 人预选 (46/50)
+  // - off_sec_01: 12 人预选 (12/30)
   const enrollmentRows = [
+    // 李明 (usr_stu_1) 基础选课
     { id: "enr_stu1_db", studentId: "usr_stu_1", offeringId: "off_db_01", status: "ACTIVE" as const, enrolledAt: now - 86400000 * 3 },
     { id: "enr_stu1_ds", studentId: "usr_stu_1", offeringId: "off_ds_01", status: "ACTIVE" as const, enrolledAt: now - 86400000 * 2 },
     { id: "enr_stu1_net", studentId: "usr_stu_1", offeringId: "off_net_01", status: "ACTIVE" as const, enrolledAt: now - 86400000 * 1 }
   ];
+
+  // 辅助函数：批量灌入 mock 学生选课
+  const addMockEnrolls = (offeringId: string, count: number) => {
+    for (let i = 1; i <= count; i++) {
+      const stuId = `usr_mock_${String(i).padStart(3, "0")}`;
+      enrollmentRows.push({
+        id: `enr_${offeringId}_m${i}`,
+        studentId: stuId,
+        offeringId,
+        status: "ACTIVE" as const,
+        enrolledAt: now - Math.floor(Math.random() * 86400000 * 5)
+      });
+    }
+  };
+
+  addMockEnrolls("off_se_01", 35); // 35/35 (满额)
+  addMockEnrolls("off_ds_01", 47); // 47 + 李明 = 48/50 (剩2个名额)
+  addMockEnrolls("off_db_01", 41); // 41 + 李明 = 42/45
+  addMockEnrolls("off_net_01", 29); // 29 + 李明 = 30/60
+  addMockEnrolls("off_os_01", 35); // 35/40
+  addMockEnrolls("off_web_01", 18); // 18/40 (充裕)
+  addMockEnrolls("off_ai_01", 46); // 46/50
+  addMockEnrolls("off_sec_01", 12); // 12/30
+
   await db.insert(enrollments).values(enrollmentRows);
 
-  // 10. 预置成绩
+  // 10. 预置成绩 (李明成绩单)
   const gradeRows = [
     { enrollmentId: "enr_stu1_db", score: 92.5, gradePoint: 4.25, submittedAt: now },
-    { enrollmentId: "enr_stu1_ds", score: 88.0, gradePoint: 3.8, submittedAt: now }
+    { enrollmentId: "enr_stu1_ds", score: 88.0, gradePoint: 3.8, submittedAt: now },
+    { enrollmentId: "enr_stu1_net", score: 91.0, gradePoint: 4.1, submittedAt: now }
   ];
   await db.insert(grades).values(gradeRows);
 
-  console.log("[PASS] SQLite 种子数据填充完毕！共注入 8 门专业核心课、8 个班次及初始选课与成绩记录。");
-
+  // 11. 同步校准所有教学班 current_capacity
   await sqlite.execute(`
     UPDATE course_offerings
     SET current_capacity = COALESCE((
@@ -211,6 +273,8 @@ async function runSeed() {
       WHERE e.offering_id = course_offerings.id AND e.status = 'ACTIVE'
     ), 0);
   `);
+
+  console.log(`[PASS] SQLite 高保真演示数据填充完毕！已注入 54 名学生、${enrollmentRows.length} 条真实选课记录与成绩。`);
 }
 
 runSeed().catch((err) => {
