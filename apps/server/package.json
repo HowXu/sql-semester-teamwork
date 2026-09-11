@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.8",
+    "@libsql/client": "^0.18.0",
     "@repo/db": "workspace:*",
     "@repo/schema": "workspace:*",
     "drizzle-orm": "^0.39.3",
