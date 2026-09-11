@@ -65,7 +65,7 @@ export function App() {
       <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/20 selection:text-primary">
         <Navbar currentTab={currentTab} onTabChange={setCurrentTab} />
 
-        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <main className="flex-1 w-full max-w-screen-2xl mx-auto px-6 sm:px-10 py-8 sm:py-10">
           <ErrorBoundary>
             <AnimatePresence mode="wait">
               <motion.div
@@ -85,8 +85,8 @@ export function App() {
           </ErrorBoundary>
         </main>
 
-        <footer className="border-t border-border/70 py-6 text-center text-xs sm:text-sm text-muted-foreground">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <footer className="border-t border-border/70 py-6 text-center text-sm sm:text-base text-muted-foreground">
+          <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-10 flex flex-col sm:flex-row items-center justify-between gap-2">
             <div className="font-medium">综合教务选课系统 · 数字化教学服务平台</div>
             <div className="text-muted-foreground/70">2026-2027学年 第一学期</div>
           </div>
