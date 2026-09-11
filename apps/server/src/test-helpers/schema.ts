@@ -51,9 +51,10 @@ export const ALL_CREATE_TABLE_STATEMENTS: readonly string[] = [
     student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     offering_id TEXT NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
     status TEXT NOT NULL DEFAULT 'ACTIVE',
-    enrolled_at INTEGER NOT NULL,
-    UNIQUE(student_id, offering_id)
+    enrolled_at INTEGER NOT NULL
   );`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS uniq_active_enrollment
+    ON enrollments(student_id, offering_id) WHERE status = 'ACTIVE';`,
   `CREATE TABLE IF NOT EXISTS grades (
     enrollment_id TEXT PRIMARY KEY REFERENCES enrollments(id) ON DELETE CASCADE,
     score REAL,

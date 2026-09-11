@@ -129,9 +129,16 @@ export function createEnrollmentsRouter(deps: EnrollmentsDeps): Hono {
     });
 
     if (updateResult.rowsAffected === 0) {
+      const realCntRows = await sqlite.execute({
+        sql: `SELECT COUNT(*) AS n FROM enrollments WHERE offering_id = ? AND status = 'ACTIVE'`,
+        args: [offeringId]
+      });
+      const realActive = Number(realCntRows.rows[0]?.n ?? 0);
       log.fail("[POST /api/enrollments/enroll] 超卖", {
         userId: currentUserId,
         offeringId,
+        realActive,
+        maxCapacity: targetOffering.maxCapacity,
       });
       return c.json({ error: "手慢了！该教学班选课名额已满，请选择其他班次。" }, 409);
     }
