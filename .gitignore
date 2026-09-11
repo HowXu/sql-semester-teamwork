@@ -27,3 +27,4 @@ dist
 .drizzle
 **/*.tsbuildinfo
 
+package-lock.json

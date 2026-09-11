@@ -18,11 +18,9 @@
   "dependencies": {
     "@libsql/client": "^0.18.0",
     "@repo/schema": "workspace:*",
-    "better-sqlite3": "^11.8.1",
     "drizzle-orm": "^0.39.3"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.12",
     "drizzle-kit": "^0.30.4",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3"
