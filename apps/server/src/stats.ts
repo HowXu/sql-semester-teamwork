@@ -1,10 +1,12 @@
 import { Hono } from "hono";
 import { db, courses, courseOfferings, teachers, students, enrollments } from "@repo/db";
 import { eq, count, sql } from "drizzle-orm";
+import { log } from "./logger.js";
 
 export const statsRouter = new Hono();
 
 statsRouter.get("/overview", async (c) => {
+  log.info("[GET /api/stats/overview] 大盘聚合");
   const [courseCountRes] = await db.select({ val: count() }).from(courses);
   const [offeringCountRes] = await db.select({ val: count() }).from(courseOfferings);
   const [teacherCountRes] = await db.select({ val: count() }).from(teachers);
@@ -54,7 +56,7 @@ statsRouter.get("/overview", async (c) => {
     enrollmentCount: data.enrollmentCount,
   }));
 
-  return c.json({
+  const result = {
     totalCourses: courseCountRes?.val || allCourses.length,
     totalOfferings: offeringCountRes?.val || allOfferings.length,
     totalTeachers: teacherCountRes?.val || 0,
@@ -65,5 +67,15 @@ statsRouter.get("/overview", async (c) => {
     overallFillRate,
     overallEnrollmentRate,
     departmentStats,
+  };
+
+  log.info("[GET /api/stats/overview] 返回", {
+    totalCourses: result.totalCourses,
+    totalOfferings: result.totalOfferings,
+    totalActiveEnrollments: result.totalActiveEnrollments,
+    overallEnrollmentRate: result.overallEnrollmentRate,
+    departments: result.departmentStats.length,
   });
+
+  return c.json(result);
 });

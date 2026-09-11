@@ -3,6 +3,7 @@ import { db, enrollments, grades } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 import { GradeInputSchema } from "@repo/schema";
 import { resolveStudentId } from "./resolveStudent.js";
+import { log } from "./logger.js";
 
 export const gradesRouter = new Hono();
 
@@ -11,6 +12,7 @@ const getMyGradesHandler = async (c: Context) => {
   const headerUser = c.req.header("x-user-id");
   const rawUser = queryStudent || headerUser;
   const currentUserId = await resolveStudentId(rawUser);
+  log.info("[GET /api/grades/my] 读取", { userId: currentUserId });
 
   const allMyEnrollments = await db.query.enrollments.findMany({
     where: and(
@@ -66,6 +68,12 @@ const getMyGradesHandler = async (c: Context) => {
   const weightedAverageScore = gradedCredits > 0 ? Number((totalWeightedScore / gradedCredits).toFixed(1)) : 0;
   const cumulativeGpa = gradedCredits > 0 ? Number((totalWeightedGpa / gradedCredits).toFixed(2)) : 0;
 
+  log.info("[GET /api/grades/my] 返回", {
+    userId: currentUserId,
+    totalCreditsEnrolled,
+    cumulativeGpa,
+  });
+
   return c.json({
     totalCreditsEnrolled,
     totalCreditsEarned,
@@ -82,10 +90,12 @@ gradesRouter.post("/submit", async (c) => {
   const body = await c.req.json();
   const parsed = GradeInputSchema.safeParse(body);
   if (!parsed.success) {
+    log.fail("[POST /api/grades/submit] 参数校验失败", { details: parsed.error.format() });
     return c.json({ error: "成绩格式错误", details: parsed.error.format() }, 400);
   }
 
   const { enrollmentId, score } = parsed.data;
+  log.info("[POST /api/grades/submit] 录入", { enrollmentId, score });
 
   // 标准高校绩点折算算法：>=60分起评，(score - 50) / 10
   let gradePoint = 0.0;
@@ -109,5 +119,6 @@ gradesRouter.post("/submit", async (c) => {
       }
     });
 
+  log.pass("[POST /api/grades/submit] 录入成功", { enrollmentId, score, gradePoint });
   return c.json({ message: "成绩录入成功", score, gradePoint });
 });

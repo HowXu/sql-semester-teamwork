@@ -3,6 +3,7 @@ import { sqlite, db, courseOfferings, enrollments, auditLogs } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 import { EnrollInputSchema } from "@repo/schema";
 import { resolveStudentId } from "./resolveStudent.js";
+import { log } from "./logger.js";
 
 export const enrollmentsRouter = new Hono();
 
@@ -11,8 +12,18 @@ enrollmentsRouter.post("/enroll", async (c) => {
   const rawUser = c.req.header("x-user-id");
   const body = await c.req.json();
   const currentUserId = await resolveStudentId(body.studentId || rawUser);
+
+  log.info("[POST /api/enrollments/enroll] 抢课开始", {
+    userId: currentUserId,
+    offeringId: body.offeringId,
+  });
+
   const parsed = EnrollInputSchema.safeParse(body);
   if (!parsed.success) {
+    log.fail("[POST /api/enrollments/enroll] 参数校验失败", {
+      userId: currentUserId,
+      details: parsed.error.format(),
+    });
     return c.json({ error: "参数校验失败", details: parsed.error.format() }, 400);
   }
 
@@ -27,6 +38,10 @@ enrollmentsRouter.post("/enroll", async (c) => {
     )
   });
   if (existing) {
+    log.fail("[POST /api/enrollments/enroll] 重复选课", {
+      userId: currentUserId,
+      offeringId,
+    });
     return c.json({ error: "您已选修了该教学班，无需重复选课" }, 400);
   }
 
@@ -39,6 +54,10 @@ enrollmentsRouter.post("/enroll", async (c) => {
     }
   });
   if (!targetOffering) {
+    log.fail("[POST /api/enrollments/enroll] 教学班不存在", {
+      userId: currentUserId,
+      offeringId,
+    });
     return c.json({ error: "该教学班不存在" }, 404);
   }
 
@@ -64,6 +83,11 @@ enrollmentsRouter.post("/enroll", async (c) => {
           if (tSlot.dayOfWeek === oSlot.dayOfWeek) {
             const hasOverlap = !(tSlot.endPeriod < oSlot.startPeriod || tSlot.startPeriod > oSlot.endPeriod);
             if (hasOverlap) {
+              log.fail("[POST /api/enrollments/enroll] 时间冲突", {
+                userId: currentUserId,
+                offeringId,
+                conflictWith: enr.offering.course.name,
+              });
               return c.json({
                 error: `选课失败：与已选课程【${enr.offering.course.name}】（周${oSlot.dayOfWeek}第${oSlot.startPeriod}-${oSlot.endPeriod}节）存在时间冲突！`
               }, 409);
@@ -84,6 +108,10 @@ enrollmentsRouter.post("/enroll", async (c) => {
   });
 
   if (updateResult.rowsAffected === 0) {
+    log.fail("[POST /api/enrollments/enroll] 超卖", {
+      userId: currentUserId,
+      offeringId,
+    });
     return c.json({ error: "手慢了！该教学班选课名额已满，请选择其他班次。" }, 409);
   }
 
@@ -106,11 +134,24 @@ enrollmentsRouter.post("/enroll", async (c) => {
       details: `学生 ${currentUserId} 成功选修教学班 ${offeringId} (${targetOffering.course.name})`,
       timestamp: now
     });
+
+    log.pass("[POST /api/enrollments/enroll] 抢课成功", {
+      userId: currentUserId,
+      offeringId,
+      enrollmentId,
+      courseName: targetOffering.course.name,
+      credits: targetOffering.course.credits,
+    });
   } catch (err) {
     // 异常情况下回滚容量计数
     await sqlite.execute({
       sql: `UPDATE course_offerings SET current_capacity = current_capacity - 1 WHERE id = ?`,
       args: [offeringId]
+    });
+    log.fail("[POST /api/enrollments/enroll] 写入失败已回滚", {
+      userId: currentUserId,
+      offeringId,
+      reason: err instanceof Error ? err.message : String(err),
     });
     return c.json({ error: "选课写入失败，已回退容量", details: String(err) }, 500);
   }
@@ -132,7 +173,16 @@ enrollmentsRouter.post("/drop", async (c) => {
   const enrollmentId = body.enrollmentId;
   const offeringId = body.offeringId;
 
+  log.info("[POST /api/enrollments/drop] 退课开始", {
+    userId: currentUserId,
+    enrollmentId,
+    offeringId,
+  });
+
   if (!enrollmentId && !offeringId) {
+    log.fail("[POST /api/enrollments/drop] 缺少 enrollmentId/offeringId", {
+      userId: currentUserId,
+    });
     return c.json({ error: "选课记录 ID 或教学班 ID 不能为空" }, 400);
   }
 
@@ -152,6 +202,11 @@ enrollmentsRouter.post("/drop", async (c) => {
   });
 
   if (!enr) {
+    log.fail("[POST /api/enrollments/drop] 未找到选课记录", {
+      userId: currentUserId,
+      enrollmentId,
+      offeringId,
+    });
     return c.json({ error: "未找到有效的选课记录" }, 404);
   }
 
@@ -174,6 +229,13 @@ enrollmentsRouter.post("/drop", async (c) => {
     timestamp: Date.now()
   });
 
+  log.pass("[POST /api/enrollments/drop] 退课成功", {
+    userId: currentUserId,
+    enrollmentId: enr.id,
+    offeringId: enr.offeringId,
+    courseName: enr.offering.course.name,
+  });
+
   return c.json({ message: "退课成功，名额已释放" });
 });
 
@@ -183,6 +245,7 @@ enrollmentsRouter.get("/my-schedule", async (c) => {
   const headerUser = c.req.header("x-user-id");
   const rawUser = queryStudent || headerUser;
   const currentUserId = await resolveStudentId(rawUser);
+  log.info("[GET /api/enrollments/my-schedule] 查询", { userId: currentUserId });
 
   const myEnrollments = await db.query.enrollments.findMany({
     where: and(
@@ -228,5 +291,10 @@ enrollmentsRouter.get("/my-schedule", async (c) => {
     }
   }
 
+  log.info("[GET /api/enrollments/my-schedule] 返回", {
+    userId: currentUserId,
+    items: scheduleItems.length,
+    totalCredits: scheduleItems.reduce((s, i) => s + i.credits, 0),
+  });
   return c.json(scheduleItems);
 });

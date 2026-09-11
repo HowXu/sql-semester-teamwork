@@ -2,12 +2,14 @@ import { Hono } from "hono";
 import { db, courseOfferings, enrollments } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 import { resolveStudentId } from "./resolveStudent.js";
+import { log } from "./logger.js";
 
 export const offeringsRouter = new Hono();
 
 offeringsRouter.get("/", async (c) => {
   const rawUser = c.req.header("x-user-id");
   const currentUserId = await resolveStudentId(rawUser);
+  log.info("[GET /api/offerings] 班次列表", { userId: currentUserId });
 
   // 1. 获取所有开课班次及关联课程、教师和时间段
   const allOfferings = await db.query.courseOfferings.findMany({
@@ -93,5 +95,12 @@ offeringsRouter.get("/", async (c) => {
     };
   });
 
+  const conflictCount = result.filter((o) => o.isConflict).length;
+  log.info("[GET /api/offerings] 返回", {
+    userId: currentUserId,
+    total: result.length,
+    enrolled: result.filter((o) => o.isEnrolled).length,
+    conflict: conflictCount,
+  });
   return c.json(result);
 });
