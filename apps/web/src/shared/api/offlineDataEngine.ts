@@ -577,6 +577,56 @@ export const offlineDataEngine = {
     };
   },
 
+  getOfferingGrades(offeringId: string) {
+    const off = db.offerings.find((o) => o.id === offeringId);
+    const list = db.enrollments.filter((e) => e.offeringId === offeringId);
+    const students = list.map((enr, idx) => {
+      const isStu1 = enr.studentId === "20240101" || enr.studentId === "2024001";
+      const studentName = isStu1 ? "李明" : `学生_${enr.studentId.replace("mock_student_", "") || idx + 1}`;
+      const studentNo = isStu1 ? "20240101" : `2024${String(idx + 2).padStart(4, "0")}`;
+      return {
+        enrollmentId: enr.id,
+        studentId: enr.studentId,
+        studentNo,
+        realName: studentName,
+        department: off?.department || "计算机科学与技术学院",
+        className: "计科2401班",
+        score: enr.score ?? null,
+        gradePoint: enr.gradePoint ?? null,
+        submittedAt: enr.enrolledAt ?? null,
+      };
+    });
+
+    return {
+      offeringId,
+      courseCode: off?.courseCode || "",
+      courseName: off?.courseName || "",
+      teacherName: off?.teacherName || "",
+      teacherId: off?.teacherId || "",
+      semester: off?.semester || "2026-秋季",
+      students,
+    };
+  },
+
+  submitGrade(enrollmentId: string, score: number) {
+    const enr = db.enrollments.find((e) => e.id === enrollmentId);
+    if (!enr) {
+      throw new Error("未找到选课记录");
+    }
+    enr.score = score;
+    let gradePoint = 0.0;
+    if (score >= 60) {
+      gradePoint = Math.min(5.0, Number(((score - 50) / 10).toFixed(2)));
+    }
+    enr.gradePoint = gradePoint;
+    saveStoredData(db);
+    return {
+      message: "成绩录入成功",
+      score,
+      gradePoint,
+    };
+  },
+
   getStats(): ApiStatsResponse {
     const totalCourses = db.courses.length;
     const totalOfferings = db.offerings.length;

@@ -75,6 +75,34 @@ export interface ApiGradeResponse {
   grades: ApiGradeItem[];
 }
 
+export interface ApiOfferingStudentGrade {
+  enrollmentId: string;
+  studentId: string;
+  studentNo: string;
+  realName: string;
+  department: string;
+  className: string;
+  score: number | null;
+  gradePoint: number | null;
+  submittedAt: number | null;
+}
+
+export interface ApiOfferingRosterResponse {
+  offeringId: string;
+  courseCode: string;
+  courseName: string;
+  teacherName: string;
+  teacherId: string;
+  semester: string;
+  students: ApiOfferingStudentGrade[];
+}
+
+export interface ApiSubmitGradeResponse {
+  message: string;
+  score: number;
+  gradePoint: number;
+}
+
 export interface ApiStatsResponse {
   totalCourses: number;
   totalOfferings: number;
@@ -384,6 +412,25 @@ export const api = {
       };
     } catch {
       return offlineDataEngine.getMyGrades(studentId, semester);
+    }
+  },
+
+  getOfferingGrades: async (offeringId: string): Promise<ApiOfferingRosterResponse> => {
+    try {
+      return await request<ApiOfferingRosterResponse>(`/api/grades/offering/${offeringId}`);
+    } catch {
+      return offlineDataEngine.getOfferingGrades(offeringId);
+    }
+  },
+
+  submitGrade: async (params: { enrollmentId: string; score: number }): Promise<ApiSubmitGradeResponse> => {
+    try {
+      return await request<ApiSubmitGradeResponse>("/api/grades/submit", {
+        method: "POST",
+        body: JSON.stringify(params),
+      });
+    } catch {
+      return offlineDataEngine.submitGrade(params.enrollmentId, params.score);
     }
   },
 
