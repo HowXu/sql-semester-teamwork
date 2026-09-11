@@ -19,6 +19,8 @@
     "test:server": "pnpm --filter @repo/server test",
     "test:web": "pnpm --filter @repo/web test",
     "test:web:watch": "pnpm --filter @repo/web test --watch",
+    "demo:race": "tsx scripts/demo-concurrency.ts",
+    "demo:race:5": "tsx scripts/demo-concurrency.ts --competitors 5 --slots 1",
     "prepare": "lefthook install"
   },
   "devDependencies": {
