@@ -1,0 +1,38 @@
+import type { ApiOffering } from "@/shared/api/client";
+
+export const TEST_OFFERINGS: ApiOffering[] = [
+  {
+    id: "off_test_01",
+    courseId: "crs_test_01",
+    teacherId: "T1001",
+    semester: "2026-秋季",
+    classroom: "测试教室 A",
+    dayOfWeek: 1,
+    startPeriod: 1,
+    endPeriod: 2,
+    maxCapacity: 45,
+    currentCapacity: 42,
+    courseName: "测试课程 1",
+    courseCode: "TEST101",
+    department: "计算机科学与技术学院",
+    credits: 3,
+    teacherName: "测试教师",
+  },
+  {
+    id: "off_test_02",
+    courseId: "crs_test_02",
+    teacherId: "T1002",
+    semester: "2026-秋季",
+    classroom: "测试教室 B",
+    dayOfWeek: 2,
+    startPeriod: 1,
+    endPeriod: 2,
+    maxCapacity: 50,
+    currentCapacity: 49,
+    courseName: "测试课程 2",
+    courseCode: "TEST102",
+    department: "软件工程学院",
+    credits: 3,
+    teacherName: "测试教师 2",
+  },
+];

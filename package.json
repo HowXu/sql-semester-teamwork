@@ -17,18 +17,24 @@
     "db:seed": "pnpm --filter @repo/db seed",
     "tauri": "pnpm --filter @repo/desktop tauri",
     "test:server": "pnpm --filter @repo/server test",
+    "test:web": "pnpm --filter @repo/web test",
+    "test:web:watch": "pnpm --filter @repo/web test --watch",
     "prepare": "lefthook install"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
     "@types/node": "^22.13.4",
     "eslint": "^9.20.1",
     "globals": "^15.15.0",
+    "jsdom": "^25.0.1",
     "lefthook": "^1.11.3",
     "picocolors": "^1.1.1",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.24.0"
+    "typescript-eslint": "^8.24.0",
+    "vitest": "^2.1.8"
   },
   "packageManager": "pnpm@10.13.1",
   "pnpm": {
