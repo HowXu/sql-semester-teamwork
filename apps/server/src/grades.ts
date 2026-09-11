@@ -88,6 +88,65 @@ export function createGradesRouter(deps: GradesDeps): Hono {
   router.get("/my-grades", getMyGradesHandler);
   router.get("/my", getMyGradesHandler);
 
+  router.get("/offering/:offeringId", async (c) => {
+    const offeringId = c.req.param("offeringId");
+    log.info("[GET /api/grades/offering/:offeringId] 查询班次学生名单", { offeringId });
+
+    const { enrollments, courseOfferings } = await import("@repo/db/schema");
+
+    const offering = await db.query.courseOfferings.findFirst({
+      where: eq(courseOfferings.id, offeringId),
+      with: {
+        course: true,
+        teacher: true,
+      },
+    });
+
+    if (!offering) {
+      log.fail("[GET /api/grades/offering/:offeringId] 教学班未找到", { offeringId });
+      return c.json({ error: "未找到该教学班" }, 404);
+    }
+
+    const enrList = await db.query.enrollments.findMany({
+      where: and(
+        eq(enrollments.offeringId, offeringId),
+        eq(enrollments.status, "ACTIVE")
+      ),
+      with: {
+        student: true,
+        grade: true,
+      },
+      orderBy: [enrollments.enrolledAt],
+    });
+
+    const students = enrList.map((enr) => ({
+      enrollmentId: enr.id,
+      studentId: enr.studentId,
+      studentNo: enr.student.studentNo,
+      realName: enr.student.realName,
+      department: enr.student.department,
+      className: enr.student.className,
+      score: enr.grade ? enr.grade.score : null,
+      gradePoint: enr.grade ? enr.grade.gradePoint : null,
+      submittedAt: enr.grade ? enr.grade.submittedAt : null,
+    }));
+
+    log.info("[GET /api/grades/offering/:offeringId] 返回名单", {
+      offeringId,
+      totalStudents: students.length,
+    });
+
+    return c.json({
+      offeringId,
+      courseCode: offering.course.code,
+      courseName: offering.course.name,
+      teacherName: offering.teacher.realName,
+      teacherId: offering.teacherId,
+      semester: offering.semester,
+      students,
+    });
+  });
+
   router.post("/submit", async (c) => {
     let body: unknown;
     try {
